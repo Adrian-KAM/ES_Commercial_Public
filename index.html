@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cashback Monitor · KAM</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root,[data-theme="dark"]{
+  --bg:#1a1a1a;--s1:#242424;--s2:#2e2e2e;
+  --brd:#3a3a3a;--brd2:#505050;
+  --bl:#6FCDFF;--y:#F4FF48;--or:#FF804D;--pu:#b48eff;
+  --ok:#4ade80;--wn:#fbbf24;--al:#f87171;--in:#60a5fa;
+  --mu:#686868;--tx:#e0e0e0;--tx2:#909090;--r:8px
+}
+[data-theme="light"]{
+  --bg:#f0f2f5;--s1:#ffffff;--s2:#e8eaef;
+  --brd:#c4c8d8;--brd2:#8890b0;
+  --bl:#1a6fb5;--y:#7a6000;--or:#b84c10;--pu:#5828b0;
+  --ok:#0f7a38;--wn:#92500a;--al:#c01818;--in:#1a50c0;
+  --mu:#505868;--tx:#111318;--tx2:#363c50;--r:8px
+}
+body{font-family:'Figtree',sans-serif;background:var(--bg);color:var(--tx);
+  height:100vh;display:flex;flex-direction:column;overflow:hidden}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+
+/* HEADER */
+header{flex-shrink:0;background:var(--s1);border-bottom:1px solid var(--brd);
+  padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between}
+.hlogo{display:flex;align-items:center;gap:10px}
+.hico{width:30px;height:30px;background:var(--bl);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:14px}
+h1{font-size:14px;font-weight:800;color:#fff}
+h1 span{color:var(--mu);font-weight:400}
+.htags{display:flex;gap:6px;align-items:center}
+.tag{background:var(--s2);border:1px solid var(--brd);color:var(--tx2);
+  padding:3px 9px;border-radius:14px;font-size:10.5px}
+.live{color:var(--ok)!important;border-color:#4ade8025!important}
+.live::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--ok);box-shadow:0 0 5px var(--ok);margin-right:5px;animation:pls 2s infinite}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.3}}
+.tmock{color:var(--or)!important;border-color:#FF804D30!important;font-weight:700;font-size:10px}
+
+/* BANNER */
+.banner{flex-shrink:0;background:#FF804D06;border-bottom:1px solid #FF804D15;
+  padding:5px 24px;font-size:10.5px;color:#FF804D70}
+.banner strong{color:var(--or)}
+.banner code{background:#fff1;padding:1px 5px;border-radius:3px}
+
+/* KPI STRIP */
+.kpi-strip{flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 24px}
+.kpi{background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);
+  padding:11px 14px;position:relative;overflow:hidden;
+  cursor:pointer;transition:border-color .15s,transform .1s}
+.kpi:hover{border-color:var(--brd2);transform:translateY(-1px)}
+.kpi.active{border-color:var(--acc,var(--brd2));box-shadow:0 0 0 1px var(--acc,var(--brd2))}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--acc,var(--brd));transition:height .15s}
+.kpi.active::before{height:3px}
+.kv{font-size:22px;font-weight:900;line-height:1}
+.kl{font-size:9px;color:var(--tx2);margin-top:4px;text-transform:uppercase;letter-spacing:.7px;font-weight:600}
+
+/* FILTERS */
+.filters{flex-shrink:0;padding:8px 24px;border-bottom:1px solid var(--brd);
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tabs{display:flex;background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);padding:3px;gap:2px}
+.tab{border:none;background:none;color:var(--tx2);padding:4px 10px;border-radius:5px;
+  font-size:10.5px;cursor:pointer;font-family:'Figtree',sans-serif;font-weight:600;transition:all .12s;
+  display:inline-flex;align-items:center;gap:5px}
+.tab.on{background:color-mix(in srgb,var(--tc,var(--tx)) 15%,transparent);color:var(--tc,var(--tx));font-weight:800;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tc,var(--brd2)) 35%,transparent)}
+.tab:hover:not(.on){color:var(--tx)}
+.tdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sp{flex:1;min-width:4px}
+.sel{background:var(--s2);border:1px solid var(--brd);color:var(--tx2);padding:5px 9px;
+  border-radius:var(--r);font-size:10.5px;cursor:pointer;font-family:'Figtree',sans-serif;max-width:155px}
+.sbox{background:var(--s2);border:1px solid var(--brd);color:var(--tx);padding:5px 10px;
+  border-radius:var(--r);font-size:10.5px;font-family:'Figtree',sans-serif;width:150px}
+.sel:focus,.sbox:focus{outline:none;border-color:var(--bl)}
+.sbox::placeholder{color:var(--mu)}
+
+/* SCROLL + TABLE */
+.scroll{flex:1;overflow-y:auto;overflow-x:auto}
+.tpad{padding:0 24px 40px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+thead th{background:var(--s1);color:var(--mu);padding:9px 12px;text-align:left;
+  font-size:9px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;
+  border-bottom:2px solid var(--brd);white-space:nowrap;position:sticky;top:0;z-index:5}
+thead th.sortable{cursor:pointer;user-select:none}
+thead th.sortable:hover{color:var(--tx);background:var(--s2)}
+thead th.sort-asc::after{content:' ↑';color:var(--bl);font-size:10px}
+thead th.sort-desc::after{content:' ↓';color:var(--bl);font-size:10px}
+.thown{color:var(--bl)}
+tbody tr{cursor:pointer;transition:background .1s}
+tbody tr:hover{background:var(--s1)}
+tbody tr:hover .bc{border-left-color:var(--bl)!important}
+td{padding:9px 12px;border-bottom:1px solid var(--brd);vertical-align:middle}
+.bc{border-left:2px solid transparent;transition:border-color .1s}
+.bn{font-size:12.5px;font-weight:700;color:#fff;line-height:1.2}
+[data-theme="light"] .bn{color:#252525}
+.bsub{font-size:10px;color:var(--mu);margin-top:1px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.kdot{width:6px;height:6px;border-radius:2px;flex-shrink:0;display:inline-block}
+.rv{font-size:12px;font-weight:800;line-height:1}
+.rb{height:2px;border-radius:1px;background:var(--brd);margin-top:3px}
+.rbf{height:2px;border-radius:1px}
+.nv{color:var(--brd2);font-size:10.5px}
+
+/* MARGIN CELL */
+.mc{display:flex;flex-direction:column;gap:2px}
+.mr{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.mout{font-size:12px;font-weight:800;color:var(--y)}
+.msep{color:var(--mu);font-size:9px}
+.min2{font-size:10px;color:var(--tx2);font-weight:600}
+.bdg{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap}
+.bok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 25%,transparent)}
+.bwn{background:color-mix(in srgb,var(--wn) 14%,transparent);color:var(--wn);border:1px solid color-mix(in srgb,var(--wn) 25%,transparent)}
+.bal{background:color-mix(in srgb,var(--al) 14%,transparent);color:var(--al);border:1px solid color-mix(in srgb,var(--al) 25%,transparent)}
+.bbl{background:color-mix(in srgb,var(--bl) 12%,transparent);color:var(--bl);border:1px solid color-mix(in srgb,var(--bl) 25%,transparent)}
+.bpu{background:color-mix(in srgb,var(--pu) 12%,transparent);color:var(--pu);border:1px solid color-mix(in srgb,var(--pu) 25%,transparent)}
+.bmu{background:color-mix(in srgb,var(--mu) 14%,transparent);color:var(--mu);border:1px solid color-mix(in srgb,var(--mu) 25%,transparent)}
+.bor{background:color-mix(in srgb,var(--or) 14%,transparent);color:var(--or);border:1px solid color-mix(in srgb,var(--or) 25%,transparent)}
+.bkey{background:color-mix(in srgb,#F59E0B 14%,transparent);color:#C97D06;border:1px solid color-mix(in srgb,#F59E0B 30%,transparent)}
+.mbar{height:3px;border-radius:2px;background:var(--brd);position:relative;margin-top:2px;overflow:visible}
+.mbf{height:3px;border-radius:2px;position:absolute;left:0;background:var(--y);opacity:.65}
+.mbc{position:absolute;top:-2px;width:2px;height:7px;background:var(--al);border-radius:1px}
+.mbi{position:absolute;top:-2px;width:2px;height:7px;background:var(--mu);border-radius:1px}
+
+/* STATUS */
+.st{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:5px;
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.str{background:#f8717112;color:var(--al);border:1px solid #f8717130}
+.sta{background:#fbbf2412;color:var(--wn);border:1px solid #fbbf2430}
+.stv{background:#60a5fa12;color:var(--in);border:1px solid #60a5fa30}
+.sto{background:#4ade8012;color:var(--ok);border:1px solid #4ade8030}
+.stn{background:#50609912;color:var(--mu);border:1px solid #50609930}
+.stc{background:#b48eff12;color:var(--pu);border:1px solid #b48eff30}
+.stp{background:#37408018;color:#506090;border:1px solid #37408030}
+.dpos{color:var(--ok);font-weight:800}
+.dneg{color:var(--al);font-weight:800}
+.dtie{color:var(--in);font-weight:700}
+.dmu{color:var(--mu)}
+.rnk{display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:5px;font-size:10px;font-weight:800}
+.rn1{background:#6FCDFF18;color:var(--bl)}
+.rn2{background:#4ade8015;color:var(--ok)}
+.rn3{background:#fbbf2415;color:var(--wn)}
+.rn4{background:#f8717112;color:var(--al)}
+
+/* MODAL */
+.ovl{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;
+  opacity:0;pointer-events:none;transition:opacity .22s;backdrop-filter:blur(3px)}
+.ovl.show{opacity:1;pointer-events:all}
+.pan{position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-48%) scale(.97);
+  opacity:0;pointer-events:none;
+  width:min(960px,96vw);max-height:90vh;overflow-y:auto;
+  background:var(--s1);border:1px solid var(--brd2);border-radius:12px;
+  z-index:101;transition:all .26s cubic-bezier(.34,1.2,.64,1);
+  box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.pan.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all}
+.ph{padding:18px 24px 14px;border-bottom:1px solid var(--brd);
+  position:sticky;top:0;background:var(--s1);z-index:5;
+  display:flex;justify-content:space-between;align-items:flex-start}
+.ph h2{font-size:20px;font-weight:900;color:#fff}
+.psub2{font-size:11px;color:var(--mu);margin-top:4px;
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.cx{background:var(--s2);border:1px solid var(--brd);color:var(--tx2);
+  width:30px;height:30px;border-radius:8px;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.cx:hover{background:var(--brd2);color:#fff}
+
+/* PANEL BODY */
+.pbody{display:grid;grid-template-columns:1fr 1fr}
+.pcl{padding:18px 22px;border-right:1px solid var(--brd)}
+.pcr{padding:18px 22px}
+.pt{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:1.2px;
+  font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.pt::after{content:'';flex:1;height:1px;background:var(--brd)}
+.mkpis{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.mkpi{background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:10px 12px}
+.mkpi .mv{font-size:17px;font-weight:900;line-height:1}
+.mkpi .ml{font-size:9px;color:var(--mu);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.mw{background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:13px}
+.mtrack{position:relative;height:7px;background:var(--bg);border-radius:4px;margin:8px 0;overflow:visible}
+.mf2{height:7px;border-radius:4px;position:absolute;left:0}
+.mc3{position:absolute;top:-4px;width:2px;height:15px;background:var(--al);border-radius:1px;box-shadow:0 0 4px var(--al)}
+.mi3{position:absolute;top:-4px;width:2px;height:15px;background:var(--mu);border-radius:1px}
+.mleg{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.mlr{display:flex;align-items:center;justify-content:space-between;font-size:10.5px}
+.mll{display:flex;align-items:center;gap:6px;color:var(--tx2)}
+.mld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.mlv{font-weight:800;font-size:11px}
+.hb{margin-bottom:9px}
+.hbh{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.hbn{font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
+.hbv{font-size:12px;font-weight:900}
+.hbt{height:5px;background:var(--s2);border-radius:3px;overflow:hidden}
+.hbf{height:5px;border-radius:3px}
+.abox{border-radius:8px;padding:13px 15px;margin-bottom:14px}
+.aico{font-size:18px;margin-bottom:6px}
+.atit{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--mu);font-weight:700;margin-bottom:5px}
+.atxt{font-size:12px;line-height:1.65;color:var(--tx)}
+[data-theme="dark"] .a-r{background:#1e1212;border:1px solid #3a2020}
+[data-theme="dark"] .a-y{background:#1c1c10;border:1px solid #363618}
+[data-theme="dark"] .a-g{background:#121e14;border:1px solid #1e3a22}
+[data-theme="dark"] .a-p{background:#1a1428;border:1px solid #2d2445}
+[data-theme="light"] .a-r{background:#fff0f0;border:1px solid #f5c0c0}
+[data-theme="light"] .a-y{background:#fffbe8;border:1px solid #e8d880}
+[data-theme="light"] .a-g{background:#f0faf2;border:1px solid #a8d8b0}
+[data-theme="light"] .a-p{background:#f4f0ff;border:1px solid #c8b8f0}
+.a-n{background:var(--s2);border:1px solid var(--brd)}
+.itg{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.iti{background:var(--s2);border:1px solid var(--brd);padding:3px 8px;border-radius:5px;
+  font-size:10px;display:flex;align-items:center;gap:3px;color:var(--tx2)}
+.iti .iv{font-weight:700;color:var(--tx)}
+.cbox{height:170px;margin-top:10px}
+.trend-bar{flex-shrink:0;padding:0 24px 8px;height:76px;display:none;overflow:visible}
+.pnotes-row{grid-column:1/-1;padding:0 22px 22px;border-top:1px solid var(--brd);margin-top:4px}
+.pnotes-ta{width:100%;background:var(--bg);border:1px solid var(--brd);border-radius:8px;
+  color:var(--tx);font-family:'Figtree',sans-serif;font-size:12px;line-height:1.6;
+  padding:10px 12px;resize:vertical;min-height:72px;outline:none;transition:border-color .15s}
+.pnotes-ta:focus{border-color:var(--brd2)}
+.pnotes-ta::placeholder{color:var(--mu)}
+.pnotes-saved{font-size:9px;color:var(--ok);opacity:0;transition:opacity .4s;margin-left:7px;font-weight:600}
+.pnotes-row{grid-column:1/-1;padding:0 22px 22px;border-top:1px solid var(--brd);margin-top:4px}
+.pnotes-ta{width:100%;background:var(--bg);border:1px solid var(--brd);border-radius:8px;
+  color:var(--tx);font-family:'Figtree',sans-serif;font-size:12px;line-height:1.6;
+  padding:10px 12px;resize:vertical;min-height:72px;outline:none;transition:border-color .15s}
+.pnotes-ta:focus{border-color:var(--brd2)}
+.pnotes-ta::placeholder{color:var(--mu)}
+.pnotes-saved{font-size:9px;color:var(--ok);opacity:0;transition:opacity .4s;margin-left:7px;font-weight:600}
+
+@media(max-width:700px){
+  .pbody{grid-template-columns:1fr}
+  .pcl{border-right:none;border-bottom:1px solid var(--brd)}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .pan{width:98vw;max-height:94vh}
+}
+
+/* LANG TOGGLE */
+.lang-btn{background:var(--s2);border:1px solid var(--brd);color:var(--tx2);
+  padding:3px 10px;border-radius:14px;font-size:10.5px;font-weight:700;
+  cursor:pointer;font-family:'Figtree',sans-serif;transition:all .15s;letter-spacing:.5px}
+.lang-btn:hover{border-color:var(--bl);color:var(--bl)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hlogo">
+    <div class="hico">💰</div>
+    <h1>Cashback Monitor <span>· KAM Portfolio ES</span></h1>
+  </div>
+  <div class="htags">
+    <span class="tag">📅 <span id="dtag">—</span></span>
+    <span class="tag live" data-i18n="liveLabel">Sistema activo</span>
+    <span class="tag live" id="tagRealData">✅ Datos reales · 2026-04-14</span>
+    <button class="lang-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    <button class="lang-btn" id="langToggle" onclick="toggleLang()">EN</button>
+  </div>
+</header>
+
+<div class="banner" id="bannerEl">
+  ⚡ <strong>CPA Avg YTD: datos reales</strong> &nbsp;·&nbsp;
+  Cashback portales: <strong>datos reales</strong> · Beruby 100✓, Igraal 100✓, Letyshops 86✓, Topcashback 71✓
+</div>
+
+<div class="kpi-strip" id="ks"></div>
+
+<div class="trend-bar"><canvas id="trendChart"></canvas></div>
+
+<div class="filters">
+  <div class="tabs" id="tabsBox">
+    <button class="tab on" data-f="all"        style="--tc:var(--tx)"  data-i18n="tabAll">Todas</button>
+    <button class="tab"    data-f="renegociar" style="--tc:var(--al)"  data-i18n="tabRenegociar"><span class="tdot" style="background:var(--al)"></span>Renegociar</button>
+    <button class="tab"    data-f="actuar"     style="--tc:var(--wn)"  data-i18n="tabActuar"    ><span class="tdot" style="background:var(--wn)"></span>Actuar</button>
+    <button class="tab"    data-f="vigilar"    style="--tc:var(--in)"  data-i18n="tabVigilar"   ><span class="tdot" style="background:var(--in)"></span>Vigilar</button>
+    <button class="tab"    data-f="lider"      style="--tc:var(--bl)"  data-i18n="tabLider"     ><span class="tdot" style="background:var(--bl)"></span>#1</button>
+    <button class="tab"    data-f="cpl"        style="--tc:var(--pu)"  data-i18n="tabCpl"       ><span class="tdot" style="background:var(--pu)"></span>CPL</button>
+
+  </div>
+  <div class="sp"></div>
+  <select class="sel" id="kamSel"><option value="" data-i18n="allKams">👤 Todos los KAMs</option></select>
+  <select class="sel" id="catSel"><option value="" data-i18n="allCats">📂 Categoría</option></select>
+  <select class="sel" id="netSel"><option value="" data-i18n="allNets">🔗 Red</option></select>
+  <input class="sbox" id="search" placeholder="🔍 Buscar...">
+  <select class="sel" id="sortSel">
+    <option value="name" data-i18n="sortName">A → Z</option>
+    <option value="cpain" data-i18n="sortCpa">CPA in ↓</option>
+    <option value="margin" data-i18n="sortMargin">Menor margen</option>
+    <option value="gap" data-i18n="sortGap">Mayor brecha</option>
+  </select>
+</div>
+
+<div class="scroll">
+  <div class="tpad">
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" data-col="name"        style="min-width:200px" data-i18n="thBrand">Marca · KAM</th>
+          <th class="sortable" data-col="cpain"        style="min-width:80px">CPA in</th>
+          <th class="sortable" data-col="revmar"       style="min-width:90px">Rev. Mar</th>
+          <th class="thown sortable" data-col="own"    style="min-width:190px">iGraal </th>
+          <th class="sortable" data-col="beruby"       style="min-width:100px">Beruby </th>
+          <th class="sortable" data-col="letyshops"    style="min-width:100px">Letyshops </th>
+          <th class="sortable" data-col="topcashback"  style="min-width:100px">TopCashback </th>
+          <th class="sortable" data-col="rank"         style="min-width:60px">Rank</th>
+          <th class="sortable" data-col="delta"        style="min-width:80px">Delta</th>
+          <th class="sortable" data-col="margin"       style="min-width:130px" data-i18n="thMargin">Margen KAM</th>
+          <th style="min-width:115px" data-i18n="thStatus">Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="ovl" id="ovl" onclick="closeP()"></div>
+<div class="pan" id="pan">
+  <div class="ph">
+    <div>
+      <h2 id="pname">—</h2>
+      <div class="psub2" id="psub">—</div>
+    </div>
+    <button class="cx" onclick="closeP()">✕</button>
+  </div>
+  <div class="pbody" id="pbody"></div>
+</div>
+
+<script>
+'use strict';
+
+// ── i18n ─────────────────────────────────────────────────
+const STRINGS={
+  es:{
+    liveLabel:'Sistema activo',
+    tagRealData:()=>`✅ Datos reales · ${TODAY}`,
+    banner:'⚡ <strong>CPA Avg YTD: datos reales</strong> &nbsp;·&nbsp; Cashback portales: <strong>datos reales</strong> · Beruby 100✓, Igraal 100✓, Letyshops 86✓, Topcashback 71✓',
+    tabAll:'Todas',tabRenegociar:'Renegociar',tabActuar:'Actuar',
+    tabVigilar:'Vigilar',tabLider:'#1',tabCpl:'CPL',
+    allKams:'👤 Todos los KAMs',allCats:'📂 Categoría',allNets:'🔗 Red',
+    searchPh:'🔍 Buscar...',
+    sortName:'A → Z',sortCpa:'CPA in ↓',sortMargin:'Menor margen',sortGap:'Mayor brecha',
+    thBrand:'Marca · KAM',thMargin:'Margen KAM',thStatus:'Estado',
+    kpiAll:'Retailers',kpiRenegociar:'Renegociar CPA',kpiActuar:'Actuar esta semana',
+    kpiLider:'Somos #1 portal',
+    stRenegociar:'Renegociar',stActuar:'Actuar',stVigilar:'Vigilar',stOk:'OK',
+    stNoDeal:'Sin acuerdo',stCpl:'CPL',stPending:'Pendiente',badgeReducible:'CHECK! ↑',
+    noResults:'Sin resultados para este filtro',
+    noKam:'Sin KAM',
+    panDeal:'Acuerdo & Margen',panMarginPp:'Margen pp',panOpMg:'Margen op.',
+    panHeadroom:'Headroom',panNet:'Red',panAction:'Acción recomendada',
+    panMarginAnalysis:'Análisis de margen',
+    panScale:(v)=>`Escala 0 → ${v}%`,
+    panCpaCeil:'Techo CPA acordado',
+    panCanMatch:'¿Puedes igualar sin renegociar?',
+    panYes:'✅ Sí',panNo:(v)=>`❌ No — faltan ${v}pp`,
+    panOurs:'(nosotros)',panBestComp:'Mejor comp.',
+    panSnapshot:'Snapshot hoy',panIgraalToday:'iGraal hoy',
+    panRank:'Ranking portales',panCpaReal:'CPA in (real)',
+    panOpMgLabel:'Margen operativo',panByPortal:'Por portal hoy',
+    panHistory:'Histórico 30 días',
+    panNotes:'Notes',panNotesSaved:'✓ Guardado',panNotesPh:'Deja aquí indicaciones, contexto o recordatorios para este retailer...',
+    competitor:'Competidor',
+    igraalOurs:'iGraal (nuestro)',
+    bestCompOf:(n)=>`Mejor comp. (${n})`,
+    act_pend_t:'CPA pendiente de confirmar',
+    act_pend_x:(n)=>`Actualiza el CPA de <strong>${n}</strong>. Sin este dato no se puede calcular margen ni posición competitiva.`,
+    act_cpl_t:'Modelo CPL / Tarifa fija',
+    act_cpl_x:(cpa)=>`CPA registrado: <strong>${cpa}%</strong>. Modelo de coste por lead o tarifa fija. La comparativa de cashback estándar no aplica directamente.`,
+    act_nd_t:'Sin acuerdo activo',
+    act_nd_x:(n)=>`Sin CPA activo para <strong>${n}</strong>. Verifica si hay oportunidad de activar un deal de cashback o integración de afiliación.`,
+    act_ren_t:'Renegociar CPA con la marca',
+    act_ren_x:(pl,best,cpa,gap)=>`<strong>${pl}</strong> ofrece <strong>${best}%</strong> — supera nuestro techo de <strong>${cpa}%</strong>.<br>Aunque cedieses todo el margen, no puedes igualar. Necesitas <strong>+${gap}pp</strong> adicionales en el acuerdo con la marca.`,
+    act_act_t:'Actuar esta semana',
+    act_act_x:(pl,delta,diff,pct,days)=>`<strong>${pl}</strong> nos supera en <strong>+${delta}pp</strong>.<br>Puedes igualar <strong>sin renegociar</strong> — headroom disponible: <strong>${diff}pp (${pct}% op.)</strong>. Llevas <strong>${days}/30 días</strong> por debajo.`,
+    act_vig_t:'Vigilar — brecha pequeña o empate',
+    act_vig_tie:'empate exacto',
+    act_vig_x:(pl,gap,hr)=>`<strong>${pl}</strong> a <strong>${gap}</strong> de nuestro cashback. Headroom: <strong>${hr}</strong>. Monitoriza si la brecha crece.`,
+    act_ok_t:'Posición líder estricta',
+    act_ok_x1:(n,delta,mg,op)=>`Somos el portal con mejor cashback para <strong>${n}</strong>. Ventaja: <strong>+${delta}pp</strong>. Margen: <strong>+${mg}pp (${op}% op.)</strong>.`,
+    act_ok_x2:(pos,tot)=>`Posición <strong>${pos}º/${tot}</strong>. Sin alerta crítica.`,
+  },
+  en:{
+    liveLabel:'System active',
+    tagRealData:()=>`✅ Real data · ${TODAY}`,
+    banner:'⚡ <strong>CPA Avg YTD: real data</strong> &nbsp;·&nbsp; Cashback portals: <strong>real data</strong> · Beruby 100✓, Igraal 100✓, Letyshops 86✓, Topcashback 71✓',
+    tabAll:'All',tabRenegociar:'Renegotiate',tabActuar:'Act',
+    tabVigilar:'Monitor',tabLider:'#1',tabCpl:'CPL',
+    allKams:'👤 All KAMs',allCats:'📂 Category',allNets:'🔗 Network',
+    searchPh:'🔍 Search...',
+    sortName:'A → Z',sortCpa:'CPA in ↓',sortMargin:'Lowest margin',sortGap:'Biggest gap',
+    thBrand:'Brand · KAM',thMargin:'KAM Margin',thStatus:'Status',
+    kpiAll:'Retailers',kpiRenegociar:'Renegotiate CPA',kpiActuar:'Act this week',
+    kpiLider:'We are #1 portal',
+    stRenegociar:'Renegotiate',stActuar:'Act',stVigilar:'Monitor',stOk:'OK',
+    stNoDeal:'No deal',stCpl:'CPL',stPending:'Pending',badgeReducible:'CHECK! ↑',
+    noResults:'No results for this filter',
+    noKam:'No KAM',
+    panDeal:'Deal & Margin',panMarginPp:'Margin pp',panOpMg:'Op. margin',
+    panHeadroom:'Headroom',panNet:'Network',panAction:'Recommended Action',
+    panMarginAnalysis:'Margin Analysis',
+    panScale:(v)=>`Scale 0 → ${v}%`,
+    panCpaCeil:'Agreed CPA ceiling',
+    panCanMatch:'Can you match without renegotiating?',
+    panYes:'✅ Yes',panNo:(v)=>`❌ No — missing ${v}pp`,
+    panOurs:'(ours)',panBestComp:'Best comp.',
+    panSnapshot:"Today's Snapshot",panIgraalToday:'iGraal today',
+    panRank:'Portal ranking',panCpaReal:'CPA in (actual)',
+    panOpMgLabel:'Operating margin',panByPortal:'By portal today',
+    panHistory:'30-day history',
+    panNotes:'Notes',panNotesSaved:'✓ Saved',panNotesPh:'Leave notes, context or reminders for this retailer...',
+    competitor:'Competitor',
+    igraalOurs:'iGraal (ours)',
+    bestCompOf:(n)=>`Best comp. (${n})`,
+    act_pend_t:'CPA pending confirmation',
+    act_pend_x:(n)=>`Update the CPA for <strong>${n}</strong>. Without this data, margin and competitive position cannot be calculated.`,
+    act_cpl_t:'CPL Model / Fixed fee',
+    act_cpl_x:(cpa)=>`Registered CPA: <strong>${cpa}%</strong>. Cost-per-lead or fixed fee model. Standard cashback comparison does not apply directly.`,
+    act_nd_t:'No active deal',
+    act_nd_x:(n)=>`No active CPA for <strong>${n}</strong>. Check if there is an opportunity to activate a cashback deal or affiliate integration.`,
+    act_ren_t:'Renegotiate CPA with brand',
+    act_ren_x:(pl,best,cpa,gap)=>`<strong>${pl}</strong> offers <strong>${best}%</strong> — exceeds our ceiling of <strong>${cpa}%</strong>.<br>Even giving up all margin, you cannot match. You need <strong>+${gap}pp</strong> more in the brand agreement.`,
+    act_act_t:'Act this week',
+    act_act_x:(pl,delta,diff,pct,days)=>`<strong>${pl}</strong> beats us by <strong>+${delta}pp</strong>.<br>You can match <strong>without renegotiating</strong> — available headroom: <strong>${diff}pp (${pct}% op.)</strong>. You have been below for <strong>${days}/30 days</strong>.`,
+    act_vig_t:'Monitor — small gap or tie',
+    act_vig_tie:'exact tie',
+    act_vig_x:(pl,gap,hr)=>`<strong>${pl}</strong> is <strong>${gap}</strong> away from our cashback. Headroom: <strong>${hr}</strong>. Monitor if the gap grows.`,
+    act_ok_t:'Strict leader position',
+    act_ok_x1:(n,delta,mg,op)=>`We are the portal with the best cashback for <strong>${n}</strong>. Advantage: <strong>+${delta}pp</strong>. Margin: <strong>+${mg}pp (${op}% op.)</strong>.`,
+    act_ok_x2:(pos,tot)=>`Position <strong>${pos}/${tot}</strong>. No critical alert.`,
+  }
+};
+
+let lang=localStorage.getItem('cb_lang')||'es';
+let theme=localStorage.getItem('cb_theme')||'dark';
+
+function toggleTheme(){
+  applyTheme(theme==='dark'?'light':'dark');
+}
+function applyTheme(t){
+  theme=t;
+  localStorage.setItem('cb_theme',t);
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeToggle').textContent=t==='dark'?'☀️':'🌙';
+}
+
+function toggleLang(){
+  applyLang(lang==='es'?'en':'es');
+}
+
+function applyLang(l){
+  lang=l;
+  localStorage.setItem('cb_lang',l);
+  document.documentElement.lang=l;
+  const t=STRINGS[l];
+  document.getElementById('langToggle').textContent=l==='es'?'EN':'ES';
+  document.getElementById('bannerEl').innerHTML=t.banner;
+  document.getElementById('tagRealData').textContent=t.tagRealData();
+  document.getElementById('search').placeholder=t.searchPh;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.dataset.i18n;
+    if(t[k]!==undefined) el.textContent=t[k];
+  });
+  renderKPIs();
+  renderTable();
+  drawTrendChart();
+}
+
+const TODAY='2026-04-14', OWN='igraal', CPL_T=75;
+const PORTALS=['igraal','beruby','letyshops','topcashback'];
+const PL={igraal:'iGraal',letyshops:'Letyshops',topcashback:'TopCashback',beruby:'Beruby'};
+const PC={igraal:'#F4FF48',letyshops:'#6FCDFF',topcashback:'#FF804D',beruby:'#a8c550'};
+const KC={
+  'Adrián Heras':'#6FCDFF','Gonzalo Escalera':'#4ade80','Regina Piñeiro':'#b48eff',
+  'Nuria Padilla':'#FF804D','Clara Rodríguez':'#F4FF48','Miguel Toledo':'#22d3ee',
+  'Mariana Hernández':'#f472b6','Dana Remberg':'#fb923c','—':'#506090'
+};
+
+// KPI definitions — filter key maps to status OR special 'lider'
+function getKpiDefs(){const t=STRINGS[lang];return[
+  {l:t.kpiAll,        acc:'var(--brd2)', vc:'var(--tx)',  f:'all'},
+  {l:t.kpiRenegociar, acc:'var(--al)',   vc:'var(--al)',  f:'renegociar'},
+  {l:t.kpiActuar,     acc:'var(--wn)',   vc:'var(--wn)',  f:'actuar'},
+  {l:t.kpiLider,      acc:'var(--bl)',   vc:'var(--bl)',  f:'lider'},
+];}
+
+// [id, name, kam, cat, net, cpa]  null=pendiente  0=sin acuerdo
+// [id, name, kam, cat, net, cpa]  null=pendiente  0=sin acuerdo
+// [id, name, kam, cat, net, cpa]  null=pendiente  0=sin acuerdo
+// [id, name, kam, cat, net, cpa]  null=pendiente  0=sin acuerdo
+// [id, name, kam, cat, net, cpa]  null=pendiente  0=sin acuerdo
+// [id, name, kam, cat, net, cpa]  null=pendiente  0=sin acuerdo
+const D=[
+['mediamarkt','MediaMarkt','Adrián Heras','Electronics','Tradedoubler (TD)',6.41],
+['aliexpress','AliExpress','Adrián Heras','Multi-Departments','Own Platform',4.61],
+['druni','Druni','Adrián Heras','Health & Beauty','Awin',4.63],
+['dyson','Dyson','Gonzalo Escalera','Home & Garden','Awin',5.85],
+['samsung','Samsung','Regina Piñero','Appliance','Awin',5.52],
+['ikea','Ikea','Gonzalo Escalera','Home & Garden','Tradedoubler (WLs)',7.63],
+['barcelo','Barceló Hoteles','Adrián Heras','Hotel & Accommodations','Tradedoubler (WLs)',9.0],
+['mifarma','Atida Mifarma','Gonzalo Escalera','Health & Beauty','Awin',4.76],
+['temu','Temu','Gonzalo Escalera','Multi-Departments','Impact Radius',22.74],
+['iqos','Iqos','Juan Martinez','—','Commission Junction',736.57,true],
+['goldcar','Goldcar','Nuria Padilla','Automotive','Awin',11.15],
+['primor','Primor','Regina Piñero','Health & Beauty','Awin',3.83],
+['laredoute','La Redoute','Clara Rodríguez','Multi-Departments','Awin',6.34],
+['trip','Trip','Nuria Padilla','Travel agencies','Commission Junction',5.89],
+['tiendanimal','Tiendanimal','Regina Piñero','Pets','Tradedoubler (TD)',10.21],
+['mangooutlet','Mango Outlet','Regina Piñero','Fashion','Linkshare (Rakuten)',12.12],
+['kiwoko','Kiwoko','Regina Piñero','Pets','Tradedoubler (TD)',10.39],
+['pikolin','Pikolin','Gonzalo Escalera','Home & Garden','Awin',9.57],
+['ebay','eBay','Gonzalo Escalera','Multi-Departments','eBay',3.16],
+['conforama','Conforama','Miguel Toledo','Home & Garden','Awin',4.89],
+['iberia','Iberia','Nuria Padilla','Travel agencies','Commission Junction',1.29],
+['octopus','Octopus','Regina Piñero','—','Tradedoubler',7000.0,true],
+['poloclub','Polo Club','Clara Rodríguez','Fashion','Commission Junction',18.21],
+['huawei','Huawei','Miguel Toledo','Electronics','Tradedoubler (TD)',10.0],
+['decathlon','Decathlon','Clara Rodríguez','Gyms & Outdoors','Awin',8.09],
+['miravia','Miravia','Gonzalo Escalera','Multi-Departments','Awin Miravia',12.81],
+['justeat','Just Eat','Gonzalo Escalera','Food & Drink','Awin',4.99],
+['shein','Shein','Regina Piñero','Fashion','Commission Junction',6.33],
+['lopesan','Lopesan','Nuria Padilla','Hotel & Accommodations','Propelbon (new)',5.0],
+['lenovo','Lenovo','Miguel Toledo','Electronics','Impact Radius',7.67],
+['desigual','Desigual','Clara Rodríguez','Fashion','Tradedoubler (WLs)',14.0],
+['adidas','Adidas','Regina Piñero','Sport Fashion','Awin',11.4],
+['intermundial','InterMundial','Nuria Padilla','Finance & Insurance','Tradedoubler (TD)',13.34],
+['deporvillage','deporvillage','Clara Rodríguez','—','Awin',5.59],
+['bbhotels','B&B Hotels','Nuria Padilla','—','TradeTracker',6.82],
+['groupon','Groupon','Regina Piñero','Entertainment','Awin',4.92],
+['singularu','Singularu','Clara Rodríguez','Jewellery','Propelbon',13.42],
+['uniqlo','Uniqlo','Clara Rodríguez','Fashion','Awin',16.15],
+['fnac','Fnac','Gonzalo Escalera','Multi-Departments','Awin',5.51],
+['expedia','Expedia','Nuria Padilla','Travel agencies','Partnerize',6.81],
+['myprotein','Myprotein','Regina Piñero','Health & Beauty','Awin',15.48],
+['sprinter','Sprinter','Regina Piñero','Sport Fashion','Awin',11.79],
+['westwing','Westwing','Mariana Hernández','Home & Garden','Linkshare (Rakuten)',6.21],
+['xiaomi','Xiaomi','Miguel Toledo','Electronics','Awin',3.88],
+['asos','ASOS','Clara Rodríguez','Fashion','Impact Radius',3.42],
+['iberostar','Iberostar','Adrián Heras','Hotel & Accommodations','Own Platform',7.5],
+['getyourguide','Get Your Guide','Nuria Padilla','Tourism & Attraction','Tradedoubler',9.92],
+['lidl','Lidl','Adrián Heras','Food & Drink','Tradedoubler (WLs)',5.0],
+['autodoc','Autodoc','Danae Remberg','Automotive','Webgains',8.55],
+['agoda','Agoda','Nuria Padilla','Travel agencies','Commission Junction',6.0],
+['nike','Nike','Regina Piñero','Sport Fashion','Awin',2.89],
+['tous','TOUS','Clara Rodríguez','Jewellery','Commission Junction',8.28],
+['nhhotels','NH Hotel Group','Nuria Padilla','Hotel & Accommodations','Tradedoubler (WLs)',13.33],
+['freshly','FRESHLY COSMETICS','Gonzalo Escalera','Health & Beauty','Awin',13.13],
+['edreams','eDreams','Nuria Padilla','Travel agencies','Tradedoubler (TD)',4.31],
+['lego','LEGO','Mariana Hernández','Baby & Child','Rakuten',10.24],
+['logitravel','Logitravel','Nuria Padilla','Travel agencies','Awin',4.26],
+['hotelesdotcom','Hoteles.com','Nuria Padilla','—','Partnerize',10.73],
+['primaseguros','Prima Seguros','Juan Martinez','—','Adtraction',null,true],
+['zalandoprive','Zalando Privé','Clara Rodríguez','—','Awin',6.7],
+['casadellibro','Casa del Libro','Gonzalo Escalera','—','Awin',12.46],
+['accor','Accor Live Limitless','Nuria Padilla','—','Netaffiliation',6.75],
+['zooplus','Zooplus','Regina Piñero','—','Awin',2.44],
+['maisonsdumonde','Maisons du Monde','Gonzalo Escalera','—','Effinity',10.0],
+['lastminute','Lastminute','Nuria Padilla','—','Awin',13.72],
+['stylevana','Stylevana','Mariana Hernández','—','Awin',11.43],
+['riafinancial','Ria Financial','Mariana Hernández','—','Awin',1.15],
+['pandora','Pandora','Clara Rodríguez','—','Awin',7.53],
+['worten','Worten','Gonzalo Escalera','—','TradeTracker',4.8],
+['miin','MiiN Cosmetics','Mariana Hernández','—','Awin',10.12],
+['showroomprive','Showroomprive','Clara Rodríguez','—','Net Affiliation',6.51],
+['vertbaudet','Vertbaudet','Mariana Hernández','—','Awin',10.0],
+['lookfantastic','LookFantastic','Mariana Hernández','—','Awin',6.3],
+['jdsports','JD Sports','Clara Rodríguez','—','Awin',14.45],
+['rebuy','reBuy','Danae Remberg','—','Awin',3.79],
+['honor','Honor','Miguel Toledo','—','Awin',5.22],
+['iherb','iHerb','Mariana Hernández','—','Partnerize (PHG)',6.93],
+['nordvpn','NordVPN','Miguel Toledo','—','Commission Junction',98.12,false],
+['farnell','Farnell','Miguel Toledo','—','Commission Junction',7.66],
+['promofarma','PromoFarma','Mariana Hernández','—','Awin',6.9],
+['douglas','Douglas','Mariana Hernández','—','Awin',9.87],
+['cultbeauty','Cult Beauty','Mariana Hernández','—','Awin',4.22],
+['hm','H&M','Regina Piñero','—','Rakuten AN',5.0],
+['kenay','Kenay','Gonzalo Escalera','—','Awin',10.39],
+['klast','Klast','Gonzalo Escalera','—','Awin',10.06],
+['dosfarma','Dosfarma','Mariana Hernández','—','Commission Junction',5.19],
+['gstar','G-Star RAW','Clara Rodríguez','—','Partnerize (PHG)',15.0],
+['qatar','Qatar Airways','Nuria Padilla','—','Commission Junction',2.0],
+['smartbox','Smartbox','Nuria Padilla','—','Rakuten AN',13.97],
+['avis','Avis','Nuria Padilla','—','Impact Radius',8.54],
+['sabadell','Banco Sabadell','Juan Martinez','—','Dentsu - Igraal',null,true],
+['iberdrola','Iberdrola','Regina Piñero','—','Making Science (TD WL)',null,true],
+['unicaja','Unicaja','Regina Piñero','—','Tradedoubler (WLS)',11000.0,true],
+['n26','N26','Gonzalo Escalera','—','Impact Radius',null,true],
+['abanca','Abanca','Juan Martinez','—','No Affiliate Network',null,true],
+['bunq','Bunq','Mariana Hernández','—','No Affiliate Network',null,true],
+['amazonmusic','Amazon Music','Mariana Hernández','—','Impact Radius',2287.7,true],
+['santevet','Santévet','Mariana Hernández','—','Affilae',10000.0,true],
+['newbalance','New Balance','Clara Rodríguez','Sport Fashion','Awin',5.34],
+['europcar','Europcar','Nuria Padilla','—','Awin',9.78]
+];
+
+// ── Real data injected by dashboard_gen.py ────────────────────
+const PERF_DATA = {"mediamarkt": {"gmv_mar": 177976.57, "rev_mar": 11411.36, "cpa_mar": 6.41, "gmv_ytd": 621698.48, "rev_ytd": 39773.75, "cpa_ytd": 6.4, "mom": 100.0}, "aliexpress": {"gmv_mar": 1138785.23, "rev_mar": 52476.51, "cpa_mar": 4.61, "gmv_ytd": 1925320.32, "rev_ytd": 97829.05, "cpa_ytd": 5.08, "mom": 265.12}, "druni": {"gmv_mar": 122883.71, "rev_mar": 5690.61, "cpa_mar": 4.63, "gmv_ytd": 317352.27, "rev_ytd": 14729.63, "cpa_ytd": 4.64, "mom": 108.16}, "dyson": {"gmv_mar": 14915.82, "rev_mar": 872.24, "cpa_mar": 5.85, "gmv_ytd": 48907.98, "rev_ytd": 2855.53, "cpa_ytd": 5.84, "mom": 155.3}, "samsung": {"gmv_mar": 19700.14, "rev_mar": 1086.58, "cpa_mar": 5.52, "gmv_ytd": 53740.91, "rev_ytd": 3160.44, "cpa_ytd": 5.88, "mom": 85.74}, "ikea": {"gmv_mar": 145927.67, "rev_mar": 11134.47, "cpa_mar": 7.63, "gmv_ytd": 352731.67, "rev_ytd": 24802.16, "cpa_ytd": 7.03, "mom": 183.52}, "barcelo": {"gmv_mar": 17756.69, "rev_mar": 1598.09, "cpa_mar": 9.0, "gmv_ytd": 52707.24, "rev_ytd": 4743.63, "cpa_ytd": 9.0, "mom": 82.45}, "mifarma": {"gmv_mar": 58819.15, "rev_mar": 2802.18, "cpa_mar": 4.76, "gmv_ytd": 159333.89, "rev_ytd": 7661.96, "cpa_ytd": 4.81, "mom": 108.51}, "temu": {"gmv_mar": 330954.19, "rev_mar": 75269.7, "cpa_mar": 22.74, "gmv_ytd": 887251.87, "rev_ytd": 170888.44, "cpa_ytd": 19.26, "mom": 125.85}, "iqos": {"gmv_mar": 577.0, "rev_mar": 4250.0, "cpa_mar": 736.57, "gmv_ytd": 577.0, "rev_ytd": 4250.0, "cpa_ytd": 736.57, "mom": 0.0}, "goldcar": {"gmv_mar": 6862.69, "rev_mar": 765.13, "cpa_mar": 11.15, "gmv_ytd": 15634.4, "rev_ytd": 1684.26, "cpa_ytd": 10.77, "mom": 182.05}, "primor": {"gmv_mar": 102378.09, "rev_mar": 3926.17, "cpa_mar": 3.83, "gmv_ytd": 253616.86, "rev_ytd": 9796.44, "cpa_ytd": 3.86, "mom": 137.03}, "laredoute": {"gmv_mar": 3898.91, "rev_mar": 247.16, "cpa_mar": 6.34, "gmv_ytd": 14678.55, "rev_ytd": 930.92, "cpa_ytd": 6.34, "mom": 74.72}, "trip": {"gmv_mar": 139925.2, "rev_mar": 8239.58, "cpa_mar": 5.89, "gmv_ytd": 328727.75, "rev_ytd": 18417.01, "cpa_ytd": 5.6, "mom": 142.95}, "tiendanimal": {"gmv_mar": 43395.2, "rev_mar": 4428.72, "cpa_mar": 10.21, "gmv_ytd": 129505.84, "rev_ytd": 12189.46, "cpa_ytd": 9.41, "mom": 113.29}, "mangooutlet": {"gmv_mar": 53789.57, "rev_mar": 6518.11, "cpa_mar": 12.12, "gmv_ytd": 169976.85, "rev_ytd": 18791.18, "cpa_ytd": 11.06, "mom": 69.24}, "kiwoko": {"gmv_mar": 34781.31, "rev_mar": 3612.16, "cpa_mar": 10.39, "gmv_ytd": 97065.83, "rev_ytd": 8953.61, "cpa_ytd": 9.22, "mom": 134.25}, "pikolin": {"gmv_mar": 6738.3, "rev_mar": 644.98, "cpa_mar": 9.57, "gmv_ytd": 20195.75, "rev_ytd": 1724.61, "cpa_ytd": 8.54, "mom": 110.18}, "ebay": {"gmv_mar": 13033.11, "rev_mar": 412.0, "cpa_mar": 3.16, "gmv_ytd": 45803.07, "rev_ytd": 1446.76, "cpa_ytd": 3.16, "mom": 94.28}, "conforama": {"gmv_mar": 16652.3, "rev_mar": 814.54, "cpa_mar": 4.89, "gmv_ytd": 39115.73, "rev_ytd": 1808.28, "cpa_ytd": 4.62, "mom": 213.4}, "iberia": {"gmv_mar": 108351.23, "rev_mar": 1398.17, "cpa_mar": 1.29, "gmv_ytd": 285109.14, "rev_ytd": 4085.27, "cpa_ytd": 1.43, "mom": 131.72}, "octopus": {"gmv_mar": 11.0, "rev_mar": 770.0, "cpa_mar": 7000.0, "gmv_ytd": 78.0, "rev_ytd": 5460.0, "cpa_ytd": 7000.0, "mom": 36.67}, "poloclub": {"gmv_mar": 2056.72, "rev_mar": 374.44, "cpa_mar": 18.21, "gmv_ytd": 8667.01, "rev_ytd": 1094.06, "cpa_ytd": 12.62, "mom": 78.03}, "huawei": {"gmv_mar": 1181.41, "rev_mar": 118.14, "cpa_mar": 10.0, "gmv_ytd": 15708.43, "rev_ytd": 1280.29, "cpa_ytd": 8.15, "mom": 23.41}, "decathlon": {"gmv_mar": 78139.19, "rev_mar": 6324.1, "cpa_mar": 8.09, "gmv_ytd": 188874.7, "rev_ytd": 13102.03, "cpa_ytd": 6.94, "mom": 146.48}, "miravia": {"gmv_mar": 99710.78, "rev_mar": 12770.24, "cpa_mar": 12.81, "gmv_ytd": 292231.66, "rev_ytd": 38514.14, "cpa_ytd": 13.18, "mom": 142.03}, "justeat": {"gmv_mar": 28277.37, "rev_mar": 1409.76, "cpa_mar": 4.99, "gmv_ytd": 73525.19, "rev_ytd": 5183.76, "cpa_ytd": 7.05, "mom": 122.82}, "shein": {"gmv_mar": 430780.59, "rev_mar": 27246.91, "cpa_mar": 6.33, "gmv_ytd": 1056512.91, "rev_ytd": 53508.07, "cpa_ytd": 5.06, "mom": 141.06}, "lopesan": {"gmv_mar": 9096.1, "rev_mar": 454.81, "cpa_mar": 5.0, "gmv_ytd": 26835.38, "rev_ytd": 1341.77, "cpa_ytd": 5.0, "mom": 337.77}, "lenovo": {"gmv_mar": 6512.66, "rev_mar": 499.26, "cpa_mar": 7.67, "gmv_ytd": 22079.7, "rev_ytd": 1433.27, "cpa_ytd": 6.49, "mom": 64.45}, "desigual": {"gmv_mar": 4367.38, "rev_mar": 611.47, "cpa_mar": 14.0, "gmv_ytd": 20257.17, "rev_ytd": 2512.84, "cpa_ytd": 12.4, "mom": 59.13}, "adidas": {"gmv_mar": 22566.07, "rev_mar": 2572.32, "cpa_mar": 11.4, "gmv_ytd": 55940.39, "rev_ytd": 4811.25, "cpa_ytd": 8.6, "mom": 263.67}, "intermundial": {"gmv_mar": 5353.19, "rev_mar": 713.97, "cpa_mar": 13.34, "gmv_ytd": 11392.34, "rev_ytd": 1499.08, "cpa_ytd": 13.16, "mom": 174.81}, "deporvillage": {"gmv_mar": 18799.47, "rev_mar": 1051.63, "cpa_mar": 5.59, "gmv_ytd": 36329.86, "rev_ytd": 1752.78, "cpa_ytd": 4.82, "mom": 287.98}, "bbhotels": {"gmv_mar": 10785.69, "rev_mar": 735.56, "cpa_mar": 6.82, "gmv_ytd": 21084.26, "rev_ytd": 1404.97, "cpa_ytd": 6.66, "mom": 151.58}, "groupon": {"gmv_mar": 11080.87, "rev_mar": 545.14, "cpa_mar": 4.92, "gmv_ytd": 39499.99, "rev_ytd": 2790.31, "cpa_ytd": 7.06, "mom": 91.85}, "singularu": {"gmv_mar": 4006.23, "rev_mar": 537.59, "cpa_mar": 13.42, "gmv_ytd": 11775.62, "rev_ytd": 1491.37, "cpa_ytd": 12.66, "mom": 112.79}, "uniqlo": {"gmv_mar": 21792.1, "rev_mar": 3518.96, "cpa_mar": 16.15, "gmv_ytd": 69218.87, "rev_ytd": 8403.22, "cpa_ytd": 12.14, "mom": 157.99}, "fnac": {"gmv_mar": 35302.06, "rev_mar": 1943.76, "cpa_mar": 5.51, "gmv_ytd": 89735.52, "rev_ytd": 4923.45, "cpa_ytd": 5.49, "mom": 165.24}, "expedia": {"gmv_mar": 15033.88, "rev_mar": 1023.16, "cpa_mar": 6.81, "gmv_ytd": 49180.29, "rev_ytd": 3865.07, "cpa_ytd": 7.86, "mom": 85.57}, "myprotein": {"gmv_mar": 13965.95, "rev_mar": 2162.28, "cpa_mar": 15.48, "gmv_ytd": 36211.87, "rev_ytd": 6024.89, "cpa_ytd": 16.64, "mom": 117.45}, "sprinter": {"gmv_mar": 14931.41, "rev_mar": 1760.7, "cpa_mar": 11.79, "gmv_ytd": 35420.25, "rev_ytd": 3873.68, "cpa_ytd": 10.94, "mom": 154.57}, "westwing": {"gmv_mar": 16128.44, "rev_mar": 1002.03, "cpa_mar": 6.21, "gmv_ytd": 31459.14, "rev_ytd": 1931.6, "cpa_ytd": 6.14, "mom": 169.13}, "xiaomi": {"gmv_mar": 10481.64, "rev_mar": 407.04, "cpa_mar": 3.88, "gmv_ytd": 25414.01, "rev_ytd": 995.79, "cpa_ytd": 3.92, "mom": 182.44}, "asos": {"gmv_mar": 13457.9, "rev_mar": 459.99, "cpa_mar": 3.42, "gmv_ytd": 28757.72, "rev_ytd": 983.04, "cpa_ytd": 3.42, "mom": 165.09}, "iberostar": {"gmv_mar": 15766.95, "rev_mar": 1182.53, "cpa_mar": 7.5, "gmv_ytd": 18651.1, "rev_ytd": 1398.84, "cpa_ytd": 7.5, "mom": 3050.35}, "getyourguide": {"gmv_mar": 16155.9, "rev_mar": 1603.03, "cpa_mar": 9.92, "gmv_ytd": 34301.18, "rev_ytd": 3417.58, "cpa_ytd": 9.96, "mom": 122.38}, "lidl": {"gmv_mar": 14038.86, "rev_mar": 702.04, "cpa_mar": 5.0, "gmv_ytd": 36674.35, "rev_ytd": 2222.8, "cpa_ytd": 6.06, "mom": 136.45}, "autodoc": {"gmv_mar": 5444.4, "rev_mar": 465.31, "cpa_mar": 8.55, "gmv_ytd": 12785.1, "rev_ytd": 943.65, "cpa_ytd": 7.38, "mom": 145.49}, "agoda": {"gmv_mar": 5884.83, "rev_mar": 353.09, "cpa_mar": 6.0, "gmv_ytd": 19505.01, "rev_ytd": 1170.3, "cpa_ytd": 6.0, "mom": 94.45}, "nike": {"gmv_mar": 8366.8, "rev_mar": 241.48, "cpa_mar": 2.89, "gmv_ytd": 36043.82, "rev_ytd": 1043.38, "cpa_ytd": 2.89, "mom": 72.66}, "tous": {"gmv_mar": 4625.0, "rev_mar": 382.94, "cpa_mar": 8.28, "gmv_ytd": 13636.0, "rev_ytd": 1129.04, "cpa_ytd": 8.28, "mom": 189.08}, "nhhotels": {"gmv_mar": 5385.11, "rev_mar": 717.98, "cpa_mar": 13.33, "gmv_ytd": 9960.0, "rev_ytd": 1266.96, "cpa_ytd": 12.72, "mom": 216.74}, "freshly": {"gmv_mar": 14096.48, "rev_mar": 1851.24, "cpa_mar": 13.13, "gmv_ytd": 29697.48, "rev_ytd": 3430.62, "cpa_ytd": 11.55, "mom": 160.17}, "edreams": {"gmv_mar": 48531.19, "rev_mar": 2089.5, "cpa_mar": 4.31, "gmv_ytd": 131053.71, "rev_ytd": 5574.19, "cpa_ytd": 4.25, "mom": 130.97}, "lego": {"gmv_mar": 2510.18, "rev_mar": 257.13, "cpa_mar": 10.24, "gmv_ytd": 17109.75, "rev_ytd": 1076.24, "cpa_ytd": 6.29, "mom": 48.26}, "logitravel": {"gmv_mar": 23580.6, "rev_mar": 1004.32, "cpa_mar": 4.26, "gmv_ytd": 78515.54, "rev_ytd": 2883.82, "cpa_ytd": 3.67, "mom": 61.14}, "hotelesdotcom": {"gmv_mar": 347141.34, "rev_mar": 37248.37, "cpa_mar": 10.73, "gmv_ytd": 347141.34, "rev_ytd": 37248.37, "cpa_ytd": 10.73, "mom": 0.0}, "primaseguros": {"gmv_mar": 3551.93, "rev_mar": 2520.0, "cpa_mar": null, "gmv_ytd": 3551.93, "rev_ytd": 10350.0, "cpa_ytd": 291.39, "mom": 0.0}, "zalandoprive": {"gmv_mar": 40648.63, "rev_mar": 2723.04, "cpa_mar": 6.7, "gmv_ytd": 144987.5, "rev_ytd": 10061.95, "cpa_ytd": 6.94, "mom": 105.62}, "casadellibro": {"gmv_mar": 23581.69, "rev_mar": 2938.11, "cpa_mar": 12.46, "gmv_ytd": 72772.96, "rev_ytd": 8659.04, "cpa_ytd": 11.9, "mom": 131.48}, "accor": {"gmv_mar": 53305.11, "rev_mar": 3596.51, "cpa_mar": 6.75, "gmv_ytd": 118812.59, "rev_ytd": 8142.34, "cpa_ytd": 6.85, "mom": 163.71}, "zooplus": {"gmv_mar": 61132.54, "rev_mar": 1489.88, "cpa_mar": 2.44, "gmv_ytd": 165562.32, "rev_ytd": 5722.97, "cpa_ytd": 3.46, "mom": 128.36}, "maisonsdumonde": {"gmv_mar": 25293.26, "rev_mar": 2528.6, "cpa_mar": 10.0, "gmv_ytd": 53588.98, "rev_ytd": 4293.38, "cpa_ytd": 8.01, "mom": 162.76}, "lastminute": {"gmv_mar": 10993.53, "rev_mar": 1508.0, "cpa_mar": 13.72, "gmv_ytd": 26963.7, "rev_ytd": 2943.0, "cpa_ytd": 10.91, "mom": 99.83}, "stylevana": {"gmv_mar": 11012.91, "rev_mar": 1258.86, "cpa_mar": 11.43, "gmv_ytd": 30151.56, "rev_ytd": 2874.67, "cpa_ytd": 9.53, "mom": 104.25}, "riafinancial": {"gmv_mar": 200927.55, "rev_mar": 2310.67, "cpa_mar": 1.15, "gmv_ytd": 215019.5, "rev_ytd": 2472.74, "cpa_ytd": 1.15, "mom": 99770.37}, "pandora": {"gmv_mar": 4139.12, "rev_mar": 311.7, "cpa_mar": 7.53, "gmv_ytd": 24391.01, "rev_ytd": 1825.35, "cpa_ytd": 7.48, "mom": 33.6}, "worten": {"gmv_mar": 9426.23, "rev_mar": 452.47, "cpa_mar": 4.8, "gmv_ytd": 37208.19, "rev_ytd": 1786.01, "cpa_ytd": 4.8, "mom": 76.0}, "miin": {"gmv_mar": 9029.95, "rev_mar": 913.93, "cpa_mar": 10.12, "gmv_ytd": 20237.49, "rev_ytd": 1784.34, "cpa_ytd": 8.82, "mom": 249.52}, "showroomprive": {"gmv_mar": 12705.75, "rev_mar": 826.58, "cpa_mar": 6.51, "gmv_ytd": 23810.89, "rev_ytd": 1716.54, "cpa_ytd": 7.21, "mom": 274.57}, "vertbaudet": {"gmv_mar": 5416.1, "rev_mar": 541.71, "cpa_mar": 10.0, "gmv_ytd": 16859.03, "rev_ytd": 1686.15, "cpa_ytd": 10.0, "mom": 93.15}, "lookfantastic": {"gmv_mar": 9789.59, "rev_mar": 617.11, "cpa_mar": 6.3, "gmv_ytd": 25195.09, "rev_ytd": 1565.23, "cpa_ytd": 6.21, "mom": 122.64}, "jdsports": {"gmv_mar": 6849.76, "rev_mar": 989.9, "cpa_mar": 14.45, "gmv_ytd": 15867.61, "rev_ytd": 1466.43, "cpa_ytd": 9.24, "mom": 153.72}, "rebuy": {"gmv_mar": 18123.47, "rev_mar": 686.8, "cpa_mar": 3.79, "gmv_ytd": 36924.76, "rev_ytd": 1441.27, "cpa_ytd": 3.9, "mom": 159.03}, "honor": {"gmv_mar": 4230.12, "rev_mar": 220.64, "cpa_mar": 5.22, "gmv_ytd": 17186.67, "rev_ytd": 1409.81, "cpa_ytd": 8.2, "mom": 105.85}, "iherb": {"gmv_mar": 11968.96, "rev_mar": 829.19, "cpa_mar": 6.93, "gmv_ytd": 20825.12, "rev_ytd": 1401.38, "cpa_ytd": 6.73, "mom": 282.46}, "nordvpn": {"gmv_mar": 1210.53, "rev_mar": 1187.8, "cpa_mar": 98.12, "gmv_ytd": 1497.65, "rev_ytd": 1381.45, "cpa_ytd": 92.24, "mom": 575.66}, "farnell": {"gmv_mar": 7974.49, "rev_mar": 610.72, "cpa_mar": 7.66, "gmv_ytd": 16472.45, "rev_ytd": 1315.37, "cpa_ytd": 7.99, "mom": 175.09}, "promofarma": {"gmv_mar": 5826.48, "rev_mar": 402.0, "cpa_mar": 6.9, "gmv_ytd": 18242.66, "rev_ytd": 1294.18, "cpa_ytd": 7.09, "mom": 95.28}, "douglas": {"gmv_mar": 3762.28, "rev_mar": 371.43, "cpa_mar": 9.87, "gmv_ytd": 11762.85, "rev_ytd": 1097.56, "cpa_ytd": 9.33, "mom": 94.47}, "cultbeauty": {"gmv_mar": 11118.47, "rev_mar": 469.34, "cpa_mar": 4.22, "gmv_ytd": 29568.24, "rev_ytd": 1090.83, "cpa_ytd": 3.69, "mom": 81.33}, "hm": {"gmv_mar": 66.91, "rev_mar": 3.35, "cpa_mar": 5.0, "gmv_ytd": 35297.77, "rev_ytd": 1081.95, "cpa_ytd": 3.07, "mom": 2.45}, "kenay": {"gmv_mar": 4542.3, "rev_mar": 471.95, "cpa_mar": 10.39, "gmv_ytd": 10785.31, "rev_ytd": 1071.35, "cpa_ytd": 9.93, "mom": 357.58}, "klast": {"gmv_mar": 3156.59, "rev_mar": 317.54, "cpa_mar": 10.06, "gmv_ytd": 10944.81, "rev_ytd": 1039.76, "cpa_ytd": 9.5, "mom": 81.41}, "dosfarma": {"gmv_mar": 7377.33, "rev_mar": 383.1, "cpa_mar": 5.19, "gmv_ytd": 20089.38, "rev_ytd": 1035.41, "cpa_ytd": 5.15, "mom": 114.3}, "gstar": {"gmv_mar": 2649.35, "rev_mar": 397.41, "cpa_mar": 15.0, "gmv_ytd": 5233.56, "rev_ytd": 1007.09, "cpa_ytd": 19.24, "mom": 1106.48}, "qatar": {"gmv_mar": 735.14, "rev_mar": 14.7, "cpa_mar": 2.0, "gmv_ytd": 27610.74, "rev_ytd": 997.63, "cpa_ytd": 3.61, "mom": 4.04}, "smartbox": {"gmv_mar": 2413.49, "rev_mar": 337.26, "cpa_mar": 13.97, "gmv_ytd": 7482.95, "rev_ytd": 985.43, "cpa_ytd": 13.17, "mom": 100.1}, "avis": {"gmv_mar": 4485.2, "rev_mar": 383.11, "cpa_mar": 8.54, "gmv_ytd": 11444.95, "rev_ytd": 977.65, "cpa_ytd": 8.54, "mom": 91.21}, "sabadell": {"gmv_mar": 0, "rev_mar": 194790, "cpa_mar": null, "gmv_ytd": 0, "rev_ytd": 350280, "cpa_ytd": null, "mom": 0}, "iberdrola": {"gmv_mar": 0, "rev_mar": 121570, "cpa_mar": null, "gmv_ytd": 0, "rev_ytd": 234880, "cpa_ytd": null, "mom": 0}, "unicaja": {"gmv_mar": 1, "rev_mar": 110, "cpa_mar": 11000.0, "gmv_ytd": 784, "rev_ytd": 100760, "cpa_ytd": 12852.04, "mom": 0.59}, "n26": {"gmv_mar": 0, "rev_mar": 41715, "cpa_mar": null, "gmv_ytd": 0, "rev_ytd": 67740, "cpa_ytd": null, "mom": 0}, "abanca": {"gmv_mar": 0, "rev_mar": 64950, "cpa_mar": null, "gmv_ytd": 0, "rev_ytd": 64950, "cpa_ytd": null, "mom": 0}, "bunq": {"gmv_mar": 0, "rev_mar": 0, "cpa_mar": null, "gmv_ytd": 0, "rev_ytd": 3445, "cpa_ytd": null, "mom": 0}, "amazonmusic": {"gmv_mar": 94.58, "rev_mar": 2163.71, "cpa_mar": 2287.7, "gmv_ytd": 127.55, "rev_ytd": 2441.23, "cpa_ytd": 1913.94, "mom": 860.6}, "santevet": {"gmv_mar": 11, "rev_mar": 1100, "cpa_mar": 10000.0, "gmv_ytd": 20, "rev_ytd": 2190, "cpa_ytd": 10950.0, "mom": 122.22}, "newbalance": {"gmv_mar": 2751.0, "rev_mar": 147.01, "cpa_mar": 5.34, "gmv_ytd": 11046.5, "rev_ytd": 928.54, "cpa_ytd": 8.41, "mom": 77.62}, "europcar": {"gmv_mar": 3566.24, "rev_mar": 348.91, "cpa_mar": 9.78, "gmv_ytd": 10160.66, "rev_ytd": 912.8, "cpa_ytd": 8.98, "mom": 140.61}};
+
+const LIVE_RATES = {"asos": {"igraal": 3.0, "letyshops": 3.0, "topcashback": 6.0, "beruby": 4.2}, "abanca": {"igraal": 15.0, "letyshops": null, "topcashback": null, "beruby": 3.5}, "accor": {"igraal": 15.0, "letyshops": 4.0, "topcashback": null, "beruby": 5.6}, "adidas": {"igraal": 5.0, "letyshops": 3.0, "topcashback": 6.0, "beruby": 6.3}, "agoda": {"igraal": 3.0, "letyshops": 3.0, "topcashback": 6.0, "beruby": 4.2}, "aliexpress": {"igraal": 2.0, "letyshops": 5.0, "topcashback": 0.75, "beruby": 5.1}, "amazonmusic": {"igraal": 20.0, "letyshops": null, "topcashback": null, "beruby": 5.6}, "mifarma": {"igraal": 6.5, "letyshops": 3.5, "topcashback": 15.0, "beruby": 5.6}, "autodoc": {"igraal": 4.0, "letyshops": 4.0, "topcashback": 8.0, "beruby": 5.6}, "avis": {"igraal": 4.0, "letyshops": 3.3, "topcashback": null, "beruby": 5.6}, "bbhotels": {"igraal": 3.25, "letyshops": 2.1, "topcashback": null, "beruby": 5.6}, "sabadell": {"igraal": 15.0, "letyshops": null, "topcashback": null, "beruby": 5.6}, "barcelo": {"igraal": 5.0, "letyshops": 3.0, "topcashback": 6.0, "beruby": 4.2}, "bunq": {"igraal": 15.0, "letyshops": null, "topcashback": null, "beruby": 14.0}, "casadellibro": {"igraal": 15.0, "letyshops": 4.3, "topcashback": 7.0, "beruby": 4.55}, "conforama": {"igraal": 3.0, "letyshops": 3.0, "topcashback": 6.0, "beruby": 3.12}, "cultbeauty": {"igraal": 5.0, "letyshops": 2.5, "topcashback": 5.0, "beruby": 3.5}, "decathlon": {"igraal": 3.0, "letyshops": 7.85, "topcashback": 5.0, "beruby": 2.1}, "desigual": {"igraal": 14.0, "letyshops": 3.85, "topcashback": 7.7, "beruby": 7.0}, "dosfarma": {"igraal": 4.0, "letyshops": 4.0, "topcashback": 8.0, "beruby": 5.6}, "douglas": {"igraal": 5.0, "letyshops": 4.5, "topcashback": 5.0, "beruby": 5.6}, "druni": {"igraal": 2.5, "letyshops": 3.25, "topcashback": 10.0, "beruby": 3.5}, "dyson": {"igraal": 3.0, "letyshops": 2.0, "topcashback": 6.0, "beruby": 2.8}, "europcar": {"igraal": 5.0, "letyshops": 3.5, "topcashback": 7.0, "beruby": 6.3}, "expedia": {"igraal": 10.0, "letyshops": 2.65, "topcashback": 2.0, "beruby": 3.5}, "freshly": {"igraal": 7.0, "letyshops": 5.0, "topcashback": 10.0, "beruby": 7.0}, "farnell": {"igraal": 4.5, "letyshops": null, "topcashback": 2.5, "beruby": 4.2}, "fnac": {"igraal": 9.0, "letyshops": 2.5, "topcashback": 3.0, "beruby": 3.5}, "gstar": {"igraal": 15.0, "letyshops": 2.6, "topcashback": null, "beruby": 5.6}, "getyourguide": {"igraal": 3.5, "letyshops": 3.5, "topcashback": 7.0, "beruby": 4.9}, "goldcar": {"igraal": 5.5, "letyshops": 4.0, "topcashback": 8.0, "beruby": 2.8}, "groupon": {"igraal": 3.5, "letyshops": 3.5, "topcashback": 6.0, "beruby": 4.9}, "hm": {"igraal": 15.0, "letyshops": 1.5, "topcashback": null, "beruby": 5.6}, "honor": {"igraal": 2.5, "letyshops": 2.5, "topcashback": 5.0, "beruby": 2.5}, "hotelesdotcom": {"igraal": 4.0, "letyshops": 2.65, "topcashback": 1.5, "beruby": 4.0}, "huawei": {"igraal": 2.5, "letyshops": 2.5, "topcashback": 5.0, "beruby": 3.5}, "iberdrola": {"igraal": 15.0, "letyshops": null, "topcashback": null, "beruby": 3.12}, "iberia": {"igraal": 0.5, "letyshops": 0.5, "topcashback": 1.0, "beruby": 0.68}, "iberostar": {"igraal": 3.5, "letyshops": 2.9, "topcashback": 5.8, "beruby": 4.0}, "ikea": {"igraal": 2.5, "letyshops": 2.5, "topcashback": null, "beruby": 3.0}, "intermundial": {"igraal": 5.0, "letyshops": 3.3, "topcashback": null, "beruby": 7.0}, "iqos": {"igraal": 25.0, "letyshops": null, "topcashback": null, "beruby": 25.0}, "jdsports": {"igraal": 9.5, "letyshops": 3.5, "topcashback": 7.0, "beruby": 6.3}, "justeat": {"igraal": 4.5, "letyshops": 4.5, "topcashback": 2.0, "beruby": 6.3}, "kenay": {"igraal": 12.0, "letyshops": 4.0, "topcashback": 8.0, "beruby": 5.6}, "kiwoko": {"igraal": 5.0, "letyshops": 4.0, "topcashback": 8.0, "beruby": 6.3}, "klast": {"igraal": 6.0, "letyshops": 4.0, "topcashback": 10.0, "beruby": 5.6}, "lego": {"igraal": 1.5, "letyshops": 7.85, "topcashback": null, "beruby": 4.9}, "laredoute": {"igraal": 4.0, "letyshops": 4.0, "topcashback": 8.0, "beruby": 5.6}, "lastminute": {"igraal": 15.0, "letyshops": 2.5, "topcashback": 1.0, "beruby": 5.6}, "lenovo": {"igraal": 3.0, "letyshops": 1.5, "topcashback": 3.0, "beruby": 2.1}, "lidl": {"igraal": 2.5, "letyshops": 2.5, "topcashback": 5.0, "beruby": 5.6}, "logitravel": {"igraal": 4.0, "letyshops": 1.55, "topcashback": 1.54, "beruby": 2.69}, "lookfantastic": {"igraal": 2.5, "letyshops": 3.5, "topcashback": 2.0, "beruby": 4.9}, "lopesan": {"igraal": 2.5, "letyshops": 1.5, "topcashback": null, "beruby": 5.6}, "maisonsdumonde": {"igraal": 3.5, "letyshops": 3.5, "topcashback": null, "beruby": 4.9}, "mangooutlet": {"igraal": 6.0, "letyshops": 2.0, "topcashback": null, "beruby": 2.8}, "mediamarkt": {"igraal": 3.5, "letyshops": 3.0, "topcashback": 3.0, "beruby": 3.0}, "miin": {"igraal": 5.0, "letyshops": 2.5, "topcashback": 5.0, "beruby": 3.5}, "miravia": {"igraal": 8.0, "letyshops": 6.0, "topcashback": 3.0, "beruby": 8.4}, "myprotein": {"igraal": 6.0, "letyshops": 5.0, "topcashback": 1.0, "beruby": 8.4}, "n26": {"igraal": 15.0, "letyshops": null, "topcashback": null, "beruby": 14.0}, "nhhotels": {"igraal": 8.0, "letyshops": null, "topcashback": null, "beruby": 5.6}, "newbalance": {"igraal": 10.0, "letyshops": null, "topcashback": 5.0, "beruby": 3.5}, "nike": {"igraal": 1.5, "letyshops": 7.85, "topcashback": 3.0, "beruby": 3.5}, "nordvpn": {"igraal": 70.0, "letyshops": 20.0, "topcashback": 40.0, "beruby": 28.0}, "octopus": {"igraal": 35.0, "letyshops": 15.75, "topcashback": null, "beruby": 21.0}, "pandora": {"igraal": 4.0, "letyshops": 7.85, "topcashback": 6.0, "beruby": 4.2}, "pikolin": {"igraal": 3.0, "letyshops": null, "topcashback": 6.0, "beruby": 2.0}, "poloclub": {"igraal": 12.0, "letyshops": 3.85, "topcashback": 7.9, "beruby": 5.53}, "primaseguros": {"igraal": 80.0, "letyshops": null, "topcashback": null, "beruby": 90.0}, "primor": {"igraal": 1.0, "letyshops": 0.75, "topcashback": 5.0, "beruby": 1.76}, "promofarma": {"igraal": 10.5, "letyshops": 5.0, "topcashback": 8.5, "beruby": 7.0}, "qatar": {"igraal": 1.0, "letyshops": 3.3, "topcashback": 2.0, "beruby": 0.68}, "riafinancial": {"igraal": 15.0, "letyshops": 3.5, "topcashback": 1.15, "beruby": 5.6}, "samsung": {"igraal": 6.0, "letyshops": 3.0, "topcashback": 6.0, "beruby": 3.0}, "santevet": {"igraal": 15.0, "letyshops": null, "topcashback": null, "beruby": 1.4}, "shein": {"igraal": 10.0, "letyshops": 5.0, "topcashback": 1.0, "beruby": 10.5}, "showroomprive": {"igraal": 7.0, "letyshops": 3.25, "topcashback": null, "beruby": 4.55}, "singularu": {"igraal": 11.2, "letyshops": 7.85, "topcashback": null, "beruby": 4.9}, "smartbox": {"igraal": 14.0, "letyshops": 4.3, "topcashback": 8.0, "beruby": 5.6}, "sprinter": {"igraal": 6.0, "letyshops": 5.0, "topcashback": 8.0, "beruby": 5.6}, "stylevana": {"igraal": 4.0, "letyshops": 5.0, "topcashback": 5.0, "beruby": 3.5}, "tous": {"igraal": 4.14, "letyshops": 3.3, "topcashback": null, "beruby": 5.8}, "temu": {"igraal": 15.0, "letyshops": 7.85, "topcashback": 5.0, "beruby": 22.4}, "tiendanimal": {"igraal": 5.0, "letyshops": 4.0, "topcashback": 6.0, "beruby": 4.2}, "trip": {"igraal": 5.0, "letyshops": 3.5, "topcashback": 3.0, "beruby": 5.6}, "unicaja": {"igraal": 15.0, "letyshops": null, "topcashback": null, "beruby": 5.6}, "uniqlo": {"igraal": 10.0, "letyshops": 2.8, "topcashback": 10.0, "beruby": 5.6}, "vertbaudet": {"igraal": 5.0, "letyshops": 7.85, "topcashback": null, "beruby": 2.66}, "westwing": {"igraal": 4.0, "letyshops": 7.85, "topcashback": 4.0, "beruby": 3.12}, "worten": {"igraal": 2.5, "letyshops": 2.4, "topcashback": null, "beruby": 3.36}, "xiaomi": {"igraal": 2.0, "letyshops": 1.0, "topcashback": 2.0, "beruby": 1.4}, "zalandoprive": {"igraal": 2.0, "letyshops": 4.0, "topcashback": 8.0, "beruby": 5.6}, "zooplus": {"igraal": 3.0, "letyshops": 3.0, "topcashback": 3.0, "beruby": 1.4}, "deporvillage": {"igraal": 2.0, "letyshops": 2.0, "topcashback": 4.0, "beruby": 0.7}, "ebay": {"igraal": 1.5, "letyshops": 7.85, "topcashback": 5.0, "beruby": 1.5}, "edreams": {"igraal": 5.5, "letyshops": 3.3, "topcashback": 3.0, "beruby": 2.1}, "iherb": {"igraal": 5.0, "letyshops": 2.0, "topcashback": 5.0, "beruby": 3.5}, "rebuy": {"igraal": 2.0, "letyshops": 2.25, "topcashback": null, "beruby": 3.15}};
+const LIVE_HIST_RAW = {"aboutyou": {"beruby": [{"date": "2026-04-09", "rate": 5.6}, {"date": "2026-04-10", "rate": 5.6}, {"date": "2026-04-11", "rate": 5.6}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}], "letyshops": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}], "topcashback": [{"date": "2026-04-13", "rate": 12.0}]}, "aeg": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 8.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}], "topcashback": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 8.0}, {"date": "2026-04-11", "rate": 8.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 8.0}]}, "asos": {"beruby": [{"date": "2026-04-09", "rate": 4.2}, {"date": "2026-04-10", "rate": 4.2}, {"date": "2026-04-11", "rate": 4.2}, {"date": "2026-04-12", "rate": 4.2}, {"date": "2026-04-13", "rate": 4.2}, {"date": "2026-04-14", "rate": 4.2}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "topcashback": [{"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "adidas": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 6.3}, {"date": "2026-04-11", "rate": 6.3}, {"date": "2026-04-12", "rate": 6.3}, {"date": "2026-04-13", "rate": 6.3}, {"date": "2026-04-14", "rate": 6.3}], "igraal": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "topcashback": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "agoda": {"beruby": [{"date": "2026-04-09", "rate": 4.2}, {"date": "2026-04-10", "rate": 4.2}, {"date": "2026-04-11", "rate": 4.2}, {"date": "2026-04-12", "rate": 4.2}, {"date": "2026-04-13", "rate": 4.2}, {"date": "2026-04-14", "rate": 4.2}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "topcashback": [{"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "aliexpress": {"beruby": [{"date": "2026-04-09", "rate": 5.1}, {"date": "2026-04-10", "rate": 5.1}, {"date": "2026-04-11", "rate": 5.1}, {"date": "2026-04-12", "rate": 5.1}, {"date": "2026-04-13", "rate": 5.1}, {"date": "2026-04-14", "rate": 5.1}], "igraal": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 10.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 2.0}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "topcashback": [{"date": "2026-04-09", "rate": 0.75}, {"date": "2026-04-10", "rate": 0.75}, {"date": "2026-04-11", "rate": 0.75}, {"date": "2026-04-12", "rate": 0.75}, {"date": "2026-04-13", "rate": 0.75}, {"date": "2026-04-14", "rate": 0.75}]}, "mifarma": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 6.5}, {"date": "2026-04-10", "rate": 6.5}, {"date": "2026-04-11", "rate": 6.5}, {"date": "2026-04-12", "rate": 6.5}, {"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 6.5}], "letyshops": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "topcashback": [{"date": "2026-04-09", "rate": 15.0}, {"date": "2026-04-10", "rate": 15.0}, {"date": "2026-04-11", "rate": 15.0}, {"date": "2026-04-12", "rate": 15.0}, {"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}]}, "autodoc": {"beruby": [{"date": "2026-04-09", "rate": 5.6}, {"date": "2026-04-10", "rate": 5.6}, {"date": "2026-04-11", "rate": 5.6}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "letyshops": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "topcashback": [{"date": "2026-04-13", "rate": 8.0}, {"date": "2026-04-14", "rate": 8.0}]}, "avianca": {"beruby": [{"date": "2026-04-09", "rate": 0.7}, {"date": "2026-04-10", "rate": 0.7}, {"date": "2026-04-11", "rate": 0.7}, {"date": "2026-04-12", "rate": 0.7}, {"date": "2026-04-13", "rate": 0.7}], "igraal": [{"date": "2026-04-09", "rate": 0.5}, {"date": "2026-04-10", "rate": 0.5}, {"date": "2026-04-11", "rate": 0.5}, {"date": "2026-04-12", "rate": 0.5}, {"date": "2026-04-13", "rate": 0.5}], "letyshops": [{"date": "2026-04-09", "rate": 0.5}, {"date": "2026-04-10", "rate": 0.5}, {"date": "2026-04-11", "rate": 0.5}, {"date": "2026-04-12", "rate": 0.5}, {"date": "2026-04-13", "rate": 0.5}]}, "bbhotels": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 3.25}, {"date": "2026-04-10", "rate": 3.25}, {"date": "2026-04-11", "rate": 3.25}, {"date": "2026-04-12", "rate": 3.25}, {"date": "2026-04-13", "rate": 3.25}, {"date": "2026-04-14", "rate": 3.25}], "letyshops": [{"date": "2026-04-09", "rate": 2.1}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 2.1}, {"date": "2026-04-12", "rate": 2.1}, {"date": "2026-04-13", "rate": 2.1}, {"date": "2026-04-14", "rate": 2.1}]}, "barcelo": {"beruby": [{"date": "2026-04-09", "rate": 4.2}, {"date": "2026-04-10", "rate": 4.2}, {"date": "2026-04-11", "rate": 4.2}, {"date": "2026-04-12", "rate": 4.2}, {"date": "2026-04-13", "rate": 4.2}, {"date": "2026-04-14", "rate": 4.2}], "igraal": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "topcashback": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "bershka": {"beruby": [{"date": "2026-04-09", "rate": 2.1}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 2.1}, {"date": "2026-04-12", "rate": 2.1}, {"date": "2026-04-13", "rate": 2.1}], "igraal": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}], "letyshops": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}]}, "booking": {"beruby": [{"date": "2026-04-09", "rate": 4.8}, {"date": "2026-04-10", "rate": 4.8}, {"date": "2026-04-11", "rate": 4.8}, {"date": "2026-04-12", "rate": 4.8}, {"date": "2026-04-13", "rate": 4.8}], "igraal": [{"date": "2026-04-09", "rate": 15.0}, {"date": "2026-04-10", "rate": 15.0}, {"date": "2026-04-11", "rate": 20.0}, {"date": "2026-04-12", "rate": 20.0}, {"date": "2026-04-13", "rate": 20.0}]}, "bricodepot": {"beruby": [{"date": "2026-04-09", "rate": 4.2}, {"date": "2026-04-10", "rate": 4.2}, {"date": "2026-04-11", "rate": 4.2}, {"date": "2026-04-12", "rate": 4.2}, {"date": "2026-04-13", "rate": 4.2}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}], "topcashback": [{"date": "2026-04-13", "rate": 3.0}]}, "carrefour": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 0.6}, {"date": "2026-04-10", "rate": 0.6}, {"date": "2026-04-11", "rate": 0.6}, {"date": "2026-04-12", "rate": 0.6}, {"date": "2026-04-13", "rate": 0.6}]}, "cashconverters": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}], "letyshops": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}]}, "conforama": {"beruby": [{"date": "2026-04-09", "rate": 3.12}, {"date": "2026-04-10", "rate": 3.12}, {"date": "2026-04-11", "rate": 3.12}, {"date": "2026-04-12", "rate": 3.12}, {"date": "2026-04-13", "rate": 3.12}, {"date": "2026-04-14", "rate": 3.12}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "topcashback": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "decathlon": {"beruby": [{"date": "2026-04-09", "rate": 2.1}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 2.1}, {"date": "2026-04-12", "rate": 2.1}, {"date": "2026-04-13", "rate": 2.1}, {"date": "2026-04-14", "rate": 2.1}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}, {"date": "2026-04-14", "rate": 7.85}], "topcashback": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "desigual": {"beruby": [{"date": "2026-04-09", "rate": 7.0}, {"date": "2026-04-10", "rate": 7.0}, {"date": "2026-04-11", "rate": 7.0}, {"date": "2026-04-12", "rate": 7.0}, {"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}], "igraal": [{"date": "2026-04-09", "rate": 11.0}, {"date": "2026-04-10", "rate": 7.0}, {"date": "2026-04-11", "rate": 7.0}, {"date": "2026-04-12", "rate": 7.0}, {"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 14.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.85}, {"date": "2026-04-10", "rate": 3.85}, {"date": "2026-04-11", "rate": 3.85}, {"date": "2026-04-12", "rate": 3.85}, {"date": "2026-04-13", "rate": 3.85}, {"date": "2026-04-14", "rate": 3.85}], "topcashback": [{"date": "2026-04-09", "rate": 7.7}, {"date": "2026-04-10", "rate": 7.7}, {"date": "2026-04-11", "rate": 7.7}, {"date": "2026-04-12", "rate": 7.7}, {"date": "2026-04-13", "rate": 7.7}, {"date": "2026-04-14", "rate": 7.7}]}, "druni": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "letyshops": [{"date": "2026-04-09", "rate": 3.25}, {"date": "2026-04-10", "rate": 3.25}, {"date": "2026-04-11", "rate": 3.25}, {"date": "2026-04-12", "rate": 3.25}, {"date": "2026-04-13", "rate": 3.25}, {"date": "2026-04-14", "rate": 3.25}], "topcashback": [{"date": "2026-04-09", "rate": 10.0}, {"date": "2026-04-10", "rate": 10.0}, {"date": "2026-04-11", "rate": 10.0}, {"date": "2026-04-12", "rate": 10.0}, {"date": "2026-04-13", "rate": 10.0}, {"date": "2026-04-14", "rate": 10.0}]}, "dyson": {"beruby": [{"date": "2026-04-09", "rate": 2.8}, {"date": "2026-04-10", "rate": 2.8}, {"date": "2026-04-11", "rate": 2.8}, {"date": "2026-04-12", "rate": 2.8}, {"date": "2026-04-13", "rate": 2.8}, {"date": "2026-04-14", "rate": 2.8}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}], "topcashback": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "evvo": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}], "topcashback": [{"date": "2026-04-13", "rate": 6.0}]}, "etihad": {"beruby": [{"date": "2026-04-09", "rate": 0.68}, {"date": "2026-04-10", "rate": 0.68}, {"date": "2026-04-11", "rate": 0.68}, {"date": "2026-04-12", "rate": 0.68}, {"date": "2026-04-13", "rate": 0.68}], "igraal": [{"date": "2026-04-09", "rate": 0.6}, {"date": "2026-04-10", "rate": 0.6}, {"date": "2026-04-11", "rate": 0.6}, {"date": "2026-04-12", "rate": 0.6}, {"date": "2026-04-13", "rate": 0.6}]}, "europcar": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 6.3}, {"date": "2026-04-11", "rate": 6.3}, {"date": "2026-04-12", "rate": 6.3}, {"date": "2026-04-13", "rate": 6.3}, {"date": "2026-04-14", "rate": 6.3}], "igraal": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "topcashback": [{"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}]}, "eveniahotels": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 40.0}, {"date": "2026-04-10", "rate": 40.0}, {"date": "2026-04-11", "rate": 40.0}, {"date": "2026-04-12", "rate": 35.0}, {"date": "2026-04-13", "rate": 35.0}]}, "expedia": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 10.0}, {"date": "2026-04-14", "rate": 10.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.65}, {"date": "2026-04-10", "rate": 2.65}, {"date": "2026-04-11", "rate": 2.65}, {"date": "2026-04-12", "rate": 2.65}, {"date": "2026-04-13", "rate": 2.65}, {"date": "2026-04-14", "rate": 2.65}], "topcashback": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}]}, "freshly": {"beruby": [{"date": "2026-04-09", "rate": 7.0}, {"date": "2026-04-10", "rate": 7.0}, {"date": "2026-04-11", "rate": 7.0}, {"date": "2026-04-12", "rate": 7.0}, {"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}], "igraal": [{"date": "2026-04-09", "rate": 7.0}, {"date": "2026-04-10", "rate": 7.0}, {"date": "2026-04-11", "rate": 7.0}, {"date": "2026-04-12", "rate": 7.0}, {"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "topcashback": [{"date": "2026-04-13", "rate": 10.0}, {"date": "2026-04-14", "rate": 10.0}]}, "farfetch": {"beruby": [{"date": "2026-04-09", "rate": 1.4}, {"date": "2026-04-10", "rate": 1.4}, {"date": "2026-04-11", "rate": 1.4}, {"date": "2026-04-12", "rate": 1.4}, {"date": "2026-04-13", "rate": 1.4}], "igraal": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}], "letyshops": [{"date": "2026-04-09", "rate": 1.0}, {"date": "2026-04-10", "rate": 1.0}, {"date": "2026-04-11", "rate": 1.0}, {"date": "2026-04-12", "rate": 1.0}, {"date": "2026-04-13", "rate": 1.0}]}, "feuvert": {"beruby": [{"date": "2026-04-09", "rate": 2.8}, {"date": "2026-04-10", "rate": 2.8}, {"date": "2026-04-11", "rate": 2.8}, {"date": "2026-04-12", "rate": 2.8}, {"date": "2026-04-13", "rate": 2.8}], "igraal": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}]}, "flex": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}], "topcashback": [{"date": "2026-04-13", "rate": 3.0}]}, "flexispot": {"beruby": [{"date": "2026-04-09", "rate": 3.9}, {"date": "2026-04-10", "rate": 3.9}, {"date": "2026-04-11", "rate": 3.9}, {"date": "2026-04-12", "rate": 3.9}, {"date": "2026-04-13", "rate": 3.9}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.8}, {"date": "2026-04-10", "rate": 2.8}, {"date": "2026-04-11", "rate": 2.8}, {"date": "2026-04-12", "rate": 2.8}, {"date": "2026-04-13", "rate": 2.8}]}, "fnac": {"beruby": [{"date": "2026-04-09", "rate": 5.6}, {"date": "2026-04-10", "rate": 5.6}, {"date": "2026-04-11", "rate": 5.6}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 8.0}, {"date": "2026-04-11", "rate": 8.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 9.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "topcashback": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}]}, "forumsport": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 2.8}, {"date": "2026-04-10", "rate": 2.8}, {"date": "2026-04-11", "rate": 2.8}, {"date": "2026-04-12", "rate": 4.5}, {"date": "2026-04-13", "rate": 2.8}], "letyshops": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}], "topcashback": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}]}, "getyourguide": {"beruby": [{"date": "2026-04-09", "rate": 4.9}, {"date": "2026-04-10", "rate": 4.9}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 4.9}, {"date": "2026-04-13", "rate": 4.9}, {"date": "2026-04-14", "rate": 4.9}], "igraal": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 5.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "letyshops": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "topcashback": [{"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}]}, "goldcar": {"beruby": [{"date": "2026-04-09", "rate": 2.8}, {"date": "2026-04-10", "rate": 2.8}, {"date": "2026-04-11", "rate": 2.8}, {"date": "2026-04-12", "rate": 2.8}, {"date": "2026-04-13", "rate": 2.8}, {"date": "2026-04-14", "rate": 2.8}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 6.5}, {"date": "2026-04-13", "rate": 5.5}, {"date": "2026-04-14", "rate": 5.5}], "letyshops": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "topcashback": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 8.0}, {"date": "2026-04-11", "rate": 8.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 8.0}, {"date": "2026-04-14", "rate": 8.0}]}, "groupon": {"beruby": [{"date": "2026-04-09", "rate": 4.9}, {"date": "2026-04-10", "rate": 4.9}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 4.9}, {"date": "2026-04-13", "rate": 4.9}, {"date": "2026-04-14", "rate": 4.9}], "igraal": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "letyshops": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "topcashback": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "hp": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}]}, "hostelworld": {"beruby": [{"date": "2026-04-09", "rate": 17.5}, {"date": "2026-04-10", "rate": 17.5}, {"date": "2026-04-11", "rate": 17.5}, {"date": "2026-04-12", "rate": 17.5}, {"date": "2026-04-13", "rate": 17.5}], "igraal": [{"date": "2026-04-09", "rate": 15.0}, {"date": "2026-04-10", "rate": 15.0}, {"date": "2026-04-11", "rate": 15.0}, {"date": "2026-04-12", "rate": 15.0}, {"date": "2026-04-13", "rate": 15.0}], "topcashback": [{"date": "2026-04-09", "rate": 25.0}, {"date": "2026-04-13", "rate": 25.0}]}, "hostinger": {"beruby": [{"date": "2026-04-09", "rate": 28.0}, {"date": "2026-04-10", "rate": 28.0}, {"date": "2026-04-11", "rate": 28.0}, {"date": "2026-04-12", "rate": 28.0}, {"date": "2026-04-13", "rate": 28.0}], "igraal": [{"date": "2026-04-09", "rate": 25.0}, {"date": "2026-04-10", "rate": 25.0}, {"date": "2026-04-11", "rate": 25.0}, {"date": "2026-04-12", "rate": 25.0}, {"date": "2026-04-13", "rate": 25.0}], "letyshops": [{"date": "2026-04-09", "rate": 30.0}, {"date": "2026-04-10", "rate": 30.0}, {"date": "2026-04-11", "rate": 30.0}, {"date": "2026-04-12", "rate": 30.0}, {"date": "2026-04-13", "rate": 30.0}], "topcashback": [{"date": "2026-04-13", "rate": 40.0}]}, "huawei": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "letyshops": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "topcashback": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "iberia": {"beruby": [{"date": "2026-04-09", "rate": 0.68}, {"date": "2026-04-10", "rate": 0.68}, {"date": "2026-04-11", "rate": 0.68}, {"date": "2026-04-12", "rate": 0.68}, {"date": "2026-04-13", "rate": 0.68}, {"date": "2026-04-14", "rate": 0.68}], "igraal": [{"date": "2026-04-09", "rate": 0.8}, {"date": "2026-04-10", "rate": 0.5}, {"date": "2026-04-11", "rate": 0.5}, {"date": "2026-04-12", "rate": 0.5}, {"date": "2026-04-13", "rate": 0.5}, {"date": "2026-04-14", "rate": 0.5}], "letyshops": [{"date": "2026-04-09", "rate": 0.5}, {"date": "2026-04-10", "rate": 0.5}, {"date": "2026-04-11", "rate": 0.5}, {"date": "2026-04-12", "rate": 0.5}, {"date": "2026-04-13", "rate": 0.5}, {"date": "2026-04-14", "rate": 0.5}], "topcashback": [{"date": "2026-04-09", "rate": 1.0}, {"date": "2026-04-10", "rate": 1.0}, {"date": "2026-04-11", "rate": 1.0}, {"date": "2026-04-12", "rate": 1.0}, {"date": "2026-04-13", "rate": 1.0}, {"date": "2026-04-14", "rate": 1.0}]}, "iberostar": {"beruby": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "igraal": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "letyshops": [{"date": "2026-04-09", "rate": 2.9}, {"date": "2026-04-10", "rate": 2.9}, {"date": "2026-04-11", "rate": 2.9}, {"date": "2026-04-12", "rate": 2.9}, {"date": "2026-04-13", "rate": 2.9}, {"date": "2026-04-14", "rate": 2.9}], "topcashback": [{"date": "2026-04-13", "rate": 5.8}, {"date": "2026-04-14", "rate": 5.8}]}, "ikea": {"beruby": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "igraal": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "letyshops": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}]}, "intermundial": {"beruby": [{"date": "2026-04-09", "rate": 7.0}, {"date": "2026-04-10", "rate": 7.0}, {"date": "2026-04-11", "rate": 7.0}, {"date": "2026-04-12", "rate": 7.0}, {"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}], "igraal": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.3}, {"date": "2026-04-10", "rate": 3.3}, {"date": "2026-04-11", "rate": 3.3}, {"date": "2026-04-12", "rate": 3.3}, {"date": "2026-04-13", "rate": 3.3}, {"date": "2026-04-14", "rate": 3.3}]}, "justeat": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 6.3}, {"date": "2026-04-11", "rate": 6.3}, {"date": "2026-04-12", "rate": 6.3}, {"date": "2026-04-13", "rate": 6.3}, {"date": "2026-04-14", "rate": 6.3}], "igraal": [{"date": "2026-04-09", "rate": 4.5}, {"date": "2026-04-10", "rate": 17.5}, {"date": "2026-04-11", "rate": 17.5}, {"date": "2026-04-12", "rate": 25.0}, {"date": "2026-04-13", "rate": 4.5}, {"date": "2026-04-14", "rate": 4.5}], "letyshops": [{"date": "2026-04-09", "rate": 4.5}, {"date": "2026-04-10", "rate": 4.5}, {"date": "2026-04-11", "rate": 4.5}, {"date": "2026-04-12", "rate": 4.5}, {"date": "2026-04-13", "rate": 4.5}, {"date": "2026-04-14", "rate": 4.5}], "topcashback": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}]}, "kiwoko": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 6.3}, {"date": "2026-04-11", "rate": 6.3}, {"date": "2026-04-12", "rate": 6.3}, {"date": "2026-04-13", "rate": 6.3}, {"date": "2026-04-14", "rate": 6.3}], "igraal": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "topcashback": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 8.0}, {"date": "2026-04-11", "rate": 8.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 8.0}, {"date": "2026-04-14", "rate": 8.0}]}, "krack": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}], "letyshops": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}], "topcashback": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 8.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 8.0}]}, "lor": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 20.0}, {"date": "2026-04-10", "rate": 20.0}, {"date": "2026-04-11", "rate": 25.0}, {"date": "2026-04-12", "rate": 25.0}, {"date": "2026-04-13", "rate": 15.0}]}, "lego": {"beruby": [{"date": "2026-04-09", "rate": 4.9}, {"date": "2026-04-10", "rate": 4.9}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 4.9}, {"date": "2026-04-13", "rate": 4.9}, {"date": "2026-04-14", "rate": 4.9}], "igraal": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}, {"date": "2026-04-14", "rate": 1.5}], "letyshops": [{"date": "2026-04-09", "rate": 4.3}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}, {"date": "2026-04-14", "rate": 7.85}]}, "lg": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}], "letyshops": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}], "topcashback": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}]}, "laredoute": {"beruby": [{"date": "2026-04-09", "rate": 5.6}, {"date": "2026-04-10", "rate": 5.6}, {"date": "2026-04-11", "rate": 5.6}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "letyshops": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "topcashback": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 8.0}, {"date": "2026-04-11", "rate": 8.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 8.0}, {"date": "2026-04-14", "rate": 8.0}]}, "latostadora": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}], "topcashback": [{"date": "2026-04-13", "rate": 10.0}]}, "lenovo": {"beruby": [{"date": "2026-04-09", "rate": 2.1}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 2.1}, {"date": "2026-04-12", "rate": 2.1}, {"date": "2026-04-13", "rate": 2.1}, {"date": "2026-04-14", "rate": 2.1}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "letyshops": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}, {"date": "2026-04-14", "rate": 1.5}], "topcashback": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}]}, "levis": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 7.5}, {"date": "2026-04-10", "rate": 7.5}, {"date": "2026-04-11", "rate": 7.5}, {"date": "2026-04-12", "rate": 7.5}, {"date": "2026-04-13", "rate": 12.0}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}]}, "lidl": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "letyshops": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "logitravel": {"beruby": [{"date": "2026-04-09", "rate": 2.69}, {"date": "2026-04-10", "rate": 2.69}, {"date": "2026-04-11", "rate": 2.69}, {"date": "2026-04-12", "rate": 2.69}, {"date": "2026-04-13", "rate": 2.69}, {"date": "2026-04-14", "rate": 2.69}], "igraal": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 4.0}], "letyshops": [{"date": "2026-04-09", "rate": 1.55}, {"date": "2026-04-10", "rate": 1.55}, {"date": "2026-04-11", "rate": 1.55}, {"date": "2026-04-12", "rate": 1.55}, {"date": "2026-04-13", "rate": 1.55}, {"date": "2026-04-14", "rate": 1.55}], "topcashback": [{"date": "2026-04-10", "rate": 1.54}, {"date": "2026-04-13", "rate": 1.54}, {"date": "2026-04-14", "rate": 1.54}]}, "lopesan": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "letyshops": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}, {"date": "2026-04-14", "rate": 1.5}]}, "mangooutlet": {"beruby": [{"date": "2026-04-09", "rate": 2.8}, {"date": "2026-04-10", "rate": 2.8}, {"date": "2026-04-11", "rate": 2.8}, {"date": "2026-04-12", "rate": 2.8}, {"date": "2026-04-13", "rate": 2.8}, {"date": "2026-04-14", "rate": 2.8}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 12.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 6.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}]}, "manomano": {"beruby": [{"date": "2026-04-09", "rate": 2.1}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 2.1}, {"date": "2026-04-12", "rate": 2.1}, {"date": "2026-04-13", "rate": 2.1}], "igraal": [{"date": "2026-04-09", "rate": 4.5}, {"date": "2026-04-10", "rate": 4.5}, {"date": "2026-04-11", "rate": 4.5}, {"date": "2026-04-12", "rate": 4.5}, {"date": "2026-04-13", "rate": 4.5}], "letyshops": [{"date": "2026-04-09", "rate": 3.3}, {"date": "2026-04-10", "rate": 3.3}, {"date": "2026-04-11", "rate": 3.3}, {"date": "2026-04-12", "rate": 3.3}, {"date": "2026-04-13", "rate": 3.3}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}]}, "mediamarkt": {"beruby": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "igraal": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 3.5}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "topcashback": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}]}, "miravia": {"beruby": [{"date": "2026-04-09", "rate": 8.4}, {"date": "2026-04-10", "rate": 8.4}, {"date": "2026-04-11", "rate": 8.4}, {"date": "2026-04-12", "rate": 8.4}, {"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 8.4}], "igraal": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 8.0}, {"date": "2026-04-11", "rate": 8.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 25.0}, {"date": "2026-04-14", "rate": 8.0}], "letyshops": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}], "topcashback": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}]}, "myprotein": {"beruby": [{"date": "2026-04-09", "rate": 8.4}, {"date": "2026-04-10", "rate": 8.4}, {"date": "2026-04-11", "rate": 8.4}, {"date": "2026-04-12", "rate": 8.4}, {"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 8.4}], "igraal": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "topcashback": [{"date": "2026-04-09", "rate": 1.0}, {"date": "2026-04-10", "rate": 1.0}, {"date": "2026-04-13", "rate": 1.0}, {"date": "2026-04-14", "rate": 1.0}]}, "nhhotels": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 8.0}, {"date": "2026-04-11", "rate": 8.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 8.0}, {"date": "2026-04-14", "rate": 8.0}]}, "nespresso": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "letyshops": [{"date": "2026-04-09", "rate": 2.8}, {"date": "2026-04-10", "rate": 2.8}, {"date": "2026-04-11", "rate": 2.8}, {"date": "2026-04-12", "rate": 2.8}, {"date": "2026-04-13", "rate": 2.8}], "topcashback": [{"date": "2026-04-13", "rate": 5.38}]}, "newbalance": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 7.0}, {"date": "2026-04-11", "rate": 7.0}, {"date": "2026-04-12", "rate": 7.0}, {"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 10.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}], "topcashback": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "nike": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}, {"date": "2026-04-14", "rate": 1.5}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}, {"date": "2026-04-14", "rate": 7.85}], "topcashback": [{"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}]}, "pepejeans": {"beruby": [{"date": "2026-04-09", "rate": 4.9}, {"date": "2026-04-10", "rate": 4.9}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 4.9}, {"date": "2026-04-13", "rate": 4.9}], "igraal": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "letyshops": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "topcashback": [{"date": "2026-04-10", "rate": 7.0}, {"date": "2026-04-13", "rate": 7.0}]}, "pierrevac": {"beruby": [{"date": "2026-04-09", "rate": 8.4}, {"date": "2026-04-10", "rate": 8.4}, {"date": "2026-04-11", "rate": 8.4}, {"date": "2026-04-12", "rate": 8.4}, {"date": "2026-04-13", "rate": 8.4}], "igraal": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}]}, "pikolin": {"beruby": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "topcashback": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "poloclub": {"beruby": [{"date": "2026-04-09", "rate": 5.53}, {"date": "2026-04-10", "rate": 5.53}, {"date": "2026-04-11", "rate": 5.53}, {"date": "2026-04-12", "rate": 5.53}, {"date": "2026-04-13", "rate": 5.53}, {"date": "2026-04-14", "rate": 5.53}], "igraal": [{"date": "2026-04-09", "rate": 7.5}, {"date": "2026-04-10", "rate": 7.5}, {"date": "2026-04-11", "rate": 7.5}, {"date": "2026-04-12", "rate": 7.5}, {"date": "2026-04-13", "rate": 7.5}, {"date": "2026-04-14", "rate": 12.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.85}, {"date": "2026-04-10", "rate": 3.85}, {"date": "2026-04-11", "rate": 3.85}, {"date": "2026-04-12", "rate": 3.85}, {"date": "2026-04-13", "rate": 3.85}, {"date": "2026-04-14", "rate": 3.85}], "topcashback": [{"date": "2026-04-09", "rate": 7.9}, {"date": "2026-04-10", "rate": 7.9}, {"date": "2026-04-11", "rate": 7.9}, {"date": "2026-04-12", "rate": 7.9}, {"date": "2026-04-13", "rate": 7.9}, {"date": "2026-04-14", "rate": 7.9}]}, "primor": {"beruby": [{"date": "2026-04-09", "rate": 1.76}, {"date": "2026-04-10", "rate": 1.76}, {"date": "2026-04-11", "rate": 1.76}, {"date": "2026-04-12", "rate": 1.76}, {"date": "2026-04-13", "rate": 1.76}, {"date": "2026-04-14", "rate": 1.76}], "igraal": [{"date": "2026-04-09", "rate": 1.0}, {"date": "2026-04-10", "rate": 1.0}, {"date": "2026-04-11", "rate": 1.0}, {"date": "2026-04-12", "rate": 1.0}, {"date": "2026-04-13", "rate": 1.0}, {"date": "2026-04-14", "rate": 1.0}], "letyshops": [{"date": "2026-04-09", "rate": 0.75}, {"date": "2026-04-10", "rate": 0.75}, {"date": "2026-04-11", "rate": 0.75}, {"date": "2026-04-12", "rate": 0.75}, {"date": "2026-04-13", "rate": 0.75}, {"date": "2026-04-14", "rate": 0.75}], "topcashback": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "quehoteles": {"beruby": [{"date": "2026-04-09", "rate": 1.4}, {"date": "2026-04-10", "rate": 1.4}, {"date": "2026-04-11", "rate": 1.4}, {"date": "2026-04-12", "rate": 1.4}, {"date": "2026-04-13", "rate": 1.4}], "igraal": [{"date": "2026-04-09", "rate": 1.0}, {"date": "2026-04-10", "rate": 1.0}, {"date": "2026-04-11", "rate": 1.0}, {"date": "2026-04-12", "rate": 1.0}, {"date": "2026-04-13", "rate": 1.0}]}, "sixt": {"beruby": [{"date": "2026-04-09", "rate": 4.2}, {"date": "2026-04-10", "rate": 4.2}, {"date": "2026-04-11", "rate": 4.2}, {"date": "2026-04-12", "rate": 4.2}, {"date": "2026-04-13", "rate": 4.2}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}]}, "samsung": {"beruby": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "igraal": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 6.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "topcashback": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "senator": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}]}, "sephora": {"beruby": [{"date": "2026-04-09", "rate": 5.6}, {"date": "2026-04-10", "rate": 5.6}, {"date": "2026-04-11", "rate": 5.6}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 1.8}, {"date": "2026-04-10", "rate": 1.8}, {"date": "2026-04-11", "rate": 1.8}, {"date": "2026-04-12", "rate": 1.8}, {"date": "2026-04-13", "rate": 1.8}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}], "topcashback": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}]}, "shein": {"beruby": [{"date": "2026-04-09", "rate": 10.5}, {"date": "2026-04-10", "rate": 10.5}, {"date": "2026-04-11", "rate": 10.5}, {"date": "2026-04-12", "rate": 10.5}, {"date": "2026-04-13", "rate": 10.5}, {"date": "2026-04-14", "rate": 10.5}], "igraal": [{"date": "2026-04-09", "rate": 10.0}, {"date": "2026-04-10", "rate": 10.0}, {"date": "2026-04-11", "rate": 10.0}, {"date": "2026-04-12", "rate": 10.0}, {"date": "2026-04-13", "rate": 10.0}, {"date": "2026-04-14", "rate": 10.0}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "topcashback": [{"date": "2026-04-09", "rate": 1.0}, {"date": "2026-04-11", "rate": 1.0}, {"date": "2026-04-12", "rate": 1.0}, {"date": "2026-04-13", "rate": 1.0}, {"date": "2026-04-14", "rate": 1.0}]}, "singularu": {"beruby": [{"date": "2026-04-09", "rate": 4.9}, {"date": "2026-04-10", "rate": 4.9}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 4.9}, {"date": "2026-04-13", "rate": 4.9}, {"date": "2026-04-14", "rate": 4.9}], "igraal": [{"date": "2026-04-09", "rate": 7.0}, {"date": "2026-04-10", "rate": 7.0}, {"date": "2026-04-11", "rate": 7.0}, {"date": "2026-04-12", "rate": 7.0}, {"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 11.2}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}, {"date": "2026-04-14", "rate": 7.85}]}, "sony": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}], "letyshops": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}]}, "sprinter": {"beruby": [{"date": "2026-04-09", "rate": 5.6}, {"date": "2026-04-10", "rate": 5.6}, {"date": "2026-04-11", "rate": 5.6}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}], "letyshops": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "topcashback": [{"date": "2026-04-13", "rate": 8.0}, {"date": "2026-04-14", "rate": 8.0}]}, "surfshark": {"beruby": [{"date": "2026-04-09", "rate": 28.0}, {"date": "2026-04-10", "rate": 28.0}, {"date": "2026-04-11", "rate": 28.0}, {"date": "2026-04-12", "rate": 28.0}, {"date": "2026-04-13", "rate": 28.0}], "igraal": [{"date": "2026-04-09", "rate": 20.0}, {"date": "2026-04-10", "rate": 20.0}, {"date": "2026-04-11", "rate": 30.0}, {"date": "2026-04-12", "rate": 30.0}, {"date": "2026-04-13", "rate": 20.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "topcashback": [{"date": "2026-04-10", "rate": 60.0}, {"date": "2026-04-13", "rate": 40.0}]}, "tous": {"beruby": [{"date": "2026-04-09", "rate": 5.8}, {"date": "2026-04-10", "rate": 5.8}, {"date": "2026-04-11", "rate": 5.8}, {"date": "2026-04-12", "rate": 5.8}, {"date": "2026-04-13", "rate": 5.8}, {"date": "2026-04-14", "rate": 5.8}], "igraal": [{"date": "2026-04-09", "rate": 4.14}, {"date": "2026-04-10", "rate": 4.14}, {"date": "2026-04-11", "rate": 4.14}, {"date": "2026-04-12", "rate": 4.14}, {"date": "2026-04-13", "rate": 4.14}, {"date": "2026-04-14", "rate": 4.14}], "letyshops": [{"date": "2026-04-09", "rate": 3.3}, {"date": "2026-04-10", "rate": 3.3}, {"date": "2026-04-11", "rate": 3.3}, {"date": "2026-04-12", "rate": 3.3}, {"date": "2026-04-13", "rate": 3.3}, {"date": "2026-04-14", "rate": 3.3}]}, "temu": {"beruby": [{"date": "2026-04-09", "rate": 22.4}, {"date": "2026-04-10", "rate": 22.4}, {"date": "2026-04-11", "rate": 22.4}, {"date": "2026-04-12", "rate": 22.4}, {"date": "2026-04-13", "rate": 22.4}, {"date": "2026-04-14", "rate": 22.4}], "igraal": [{"date": "2026-04-09", "rate": 15.0}, {"date": "2026-04-10", "rate": 15.0}, {"date": "2026-04-11", "rate": 25.0}, {"date": "2026-04-12", "rate": 15.0}, {"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}], "letyshops": [{"date": "2026-04-09", "rate": 10.0}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}, {"date": "2026-04-14", "rate": 7.85}], "topcashback": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "tiendanimal": {"beruby": [{"date": "2026-04-09", "rate": 4.2}, {"date": "2026-04-10", "rate": 4.2}, {"date": "2026-04-11", "rate": 4.2}, {"date": "2026-04-12", "rate": 4.2}, {"date": "2026-04-13", "rate": 4.2}, {"date": "2026-04-14", "rate": 4.2}], "igraal": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 18.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "topcashback": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "tiktokshop": {"beruby": [{"date": "2026-04-09", "rate": 28.0}, {"date": "2026-04-10", "rate": 28.0}, {"date": "2026-04-11", "rate": 28.0}, {"date": "2026-04-12", "rate": 28.0}, {"date": "2026-04-13", "rate": 28.0}], "igraal": [{"date": "2026-04-09", "rate": 12.5}, {"date": "2026-04-10", "rate": 12.5}, {"date": "2026-04-11", "rate": 12.5}, {"date": "2026-04-12", "rate": 12.5}, {"date": "2026-04-13", "rate": 12.5}]}, "tommyhilfiger": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}]}, "trip": {"beruby": [{"date": "2026-04-09", "rate": 6.3}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 4.9}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "topcashback": [{"date": "2026-04-09", "rate": 3.0}, {"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-11", "rate": 3.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "letyshops": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}]}, "udemy": {"beruby": [{"date": "2026-04-09", "rate": 8.0}, {"date": "2026-04-10", "rate": 8.0}, {"date": "2026-04-11", "rate": 8.0}, {"date": "2026-04-12", "rate": 8.0}, {"date": "2026-04-13", "rate": 8.0}], "igraal": [{"date": "2026-04-09", "rate": 10.0}, {"date": "2026-04-10", "rate": 10.0}, {"date": "2026-04-11", "rate": 10.0}, {"date": "2026-04-12", "rate": 10.0}, {"date": "2026-04-13", "rate": 10.0}], "letyshops": [{"date": "2026-04-09", "rate": 6.5}, {"date": "2026-04-10", "rate": 6.5}, {"date": "2026-04-11", "rate": 6.5}, {"date": "2026-04-12", "rate": 6.5}, {"date": "2026-04-13", "rate": 6.5}], "topcashback": [{"date": "2026-04-09", "rate": 10.0}, {"date": "2026-04-10", "rate": 10.0}, {"date": "2026-04-13", "rate": 10.0}]}, "underarmour": {"beruby": [{"date": "2026-04-09", "rate": 3.5}, {"date": "2026-04-10", "rate": 3.5}, {"date": "2026-04-11", "rate": 3.5}, {"date": "2026-04-12", "rate": 3.5}, {"date": "2026-04-13", "rate": 3.5}], "igraal": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}], "letyshops": [{"date": "2026-04-09", "rate": 2.5}, {"date": "2026-04-10", "rate": 2.5}, {"date": "2026-04-11", "rate": 2.5}, {"date": "2026-04-12", "rate": 2.5}, {"date": "2026-04-13", "rate": 2.5}], "topcashback": [{"date": "2026-04-13", "rate": 8.0}]}, "uniqlo": {"beruby": [{"date": "2026-04-09", "rate": 5.6}, {"date": "2026-04-10", "rate": 5.6}, {"date": "2026-04-11", "rate": 5.6}, {"date": "2026-04-12", "rate": 5.6}, {"date": "2026-04-13", "rate": 5.6}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-09", "rate": 20.0}, {"date": "2026-04-10", "rate": 20.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 10.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.8}, {"date": "2026-04-10", "rate": 2.8}, {"date": "2026-04-11", "rate": 2.8}, {"date": "2026-04-12", "rate": 2.8}, {"date": "2026-04-13", "rate": 2.8}, {"date": "2026-04-14", "rate": 2.8}], "topcashback": [{"date": "2026-04-09", "rate": 10.0}, {"date": "2026-04-10", "rate": 10.0}, {"date": "2026-04-13", "rate": 10.0}, {"date": "2026-04-14", "rate": 10.0}]}, "westwing": {"beruby": [{"date": "2026-04-09", "rate": 3.12}, {"date": "2026-04-10", "rate": 3.12}, {"date": "2026-04-11", "rate": 3.12}, {"date": "2026-04-12", "rate": 3.12}, {"date": "2026-04-13", "rate": 3.12}, {"date": "2026-04-14", "rate": 3.12}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.7}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}, {"date": "2026-04-14", "rate": 7.85}], "topcashback": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}]}, "xiaomi": {"beruby": [{"date": "2026-04-09", "rate": 1.4}, {"date": "2026-04-10", "rate": 1.4}, {"date": "2026-04-11", "rate": 1.4}, {"date": "2026-04-12", "rate": 1.4}, {"date": "2026-04-13", "rate": 1.4}, {"date": "2026-04-14", "rate": 1.4}], "igraal": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 3.0}, {"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}], "letyshops": [{"date": "2026-04-09", "rate": 1.0}, {"date": "2026-04-10", "rate": 1.0}, {"date": "2026-04-11", "rate": 1.0}, {"date": "2026-04-12", "rate": 1.0}, {"date": "2026-04-13", "rate": 1.0}, {"date": "2026-04-14", "rate": 1.0}], "topcashback": [{"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}]}, "deporvillage": {"beruby": [{"date": "2026-04-09", "rate": 0.7}, {"date": "2026-04-10", "rate": 0.7}, {"date": "2026-04-11", "rate": 0.7}, {"date": "2026-04-12", "rate": 0.7}, {"date": "2026-04-13", "rate": 0.7}, {"date": "2026-04-14", "rate": 0.7}], "igraal": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}], "letyshops": [{"date": "2026-04-09", "rate": 2.0}, {"date": "2026-04-10", "rate": 2.0}, {"date": "2026-04-11", "rate": 2.0}, {"date": "2026-04-12", "rate": 2.0}, {"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}], "topcashback": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 4.0}, {"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}]}, "ebay": {"beruby": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}, {"date": "2026-04-14", "rate": 1.5}], "igraal": [{"date": "2026-04-09", "rate": 1.5}, {"date": "2026-04-10", "rate": 1.5}, {"date": "2026-04-11", "rate": 1.5}, {"date": "2026-04-12", "rate": 1.5}, {"date": "2026-04-13", "rate": 1.5}, {"date": "2026-04-14", "rate": 1.5}], "letyshops": [{"date": "2026-04-09", "rate": 3.7}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}, {"date": "2026-04-14", "rate": 7.85}], "topcashback": [{"date": "2026-04-09", "rate": 5.0}, {"date": "2026-04-10", "rate": 5.0}, {"date": "2026-04-11", "rate": 5.0}, {"date": "2026-04-12", "rate": 5.0}, {"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "edreams": {"beruby": [{"date": "2026-04-09", "rate": 2.1}, {"date": "2026-04-10", "rate": 2.1}, {"date": "2026-04-11", "rate": 2.1}, {"date": "2026-04-12", "rate": 2.1}, {"date": "2026-04-13", "rate": 2.1}, {"date": "2026-04-14", "rate": 2.1}], "igraal": [{"date": "2026-04-09", "rate": 4.0}, {"date": "2026-04-10", "rate": 4.0}, {"date": "2026-04-11", "rate": 4.0}, {"date": "2026-04-12", "rate": 9.0}, {"date": "2026-04-13", "rate": 9.0}, {"date": "2026-04-14", "rate": 5.5}], "letyshops": [{"date": "2026-04-09", "rate": 3.3}, {"date": "2026-04-10", "rate": 3.3}, {"date": "2026-04-11", "rate": 3.3}, {"date": "2026-04-12", "rate": 3.3}, {"date": "2026-04-13", "rate": 3.3}, {"date": "2026-04-14", "rate": 3.3}], "topcashback": [{"date": "2026-04-10", "rate": 3.0}, {"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}]}, "irobot": {"beruby": [{"date": "2026-04-09", "rate": 2.8}, {"date": "2026-04-10", "rate": 2.8}, {"date": "2026-04-11", "rate": 2.8}, {"date": "2026-04-12", "rate": 2.8}, {"date": "2026-04-13", "rate": 2.8}], "igraal": [{"date": "2026-04-09", "rate": 6.0}, {"date": "2026-04-10", "rate": 6.0}, {"date": "2026-04-11", "rate": 6.0}, {"date": "2026-04-12", "rate": 6.0}, {"date": "2026-04-13", "rate": 6.0}], "letyshops": [{"date": "2026-04-09", "rate": 3.7}, {"date": "2026-04-10", "rate": 7.85}, {"date": "2026-04-11", "rate": 7.85}, {"date": "2026-04-12", "rate": 7.85}, {"date": "2026-04-13", "rate": 7.85}], "topcashback": [{"date": "2026-04-13", "rate": 4.0}]}, "abanca": {"beruby": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}]}, "accor": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}], "letyshops": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}]}, "amazonmusic": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 20.0}, {"date": "2026-04-14", "rate": 20.0}]}, "aromas": {"beruby": [{"date": "2026-04-13", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 70.0}], "letyshops": [{"date": "2026-04-13", "rate": 7.85}], "topcashback": [{"date": "2026-04-13", "rate": 3.0}]}, "avis": {"beruby": [{"date": "2026-04-13", "rate": 5.6}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "letyshops": [{"date": "2026-04-13", "rate": 3.3}, {"date": "2026-04-14", "rate": 3.3}]}, "sabadell": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}]}, "bunq": {"beruby": [{"date": "2026-04-13", "rate": 14.0}, {"date": "2026-04-14", "rate": 14.0}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}]}, "casadellibro": {"beruby": [{"date": "2026-04-13", "rate": 4.55}, {"date": "2026-04-14", "rate": 4.55}], "igraal": [{"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 15.0}], "letyshops": [{"date": "2026-04-13", "rate": 4.3}, {"date": "2026-04-14", "rate": 4.3}], "topcashback": [{"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}]}, "cultbeauty": {"beruby": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "dosfarma": {"beruby": [{"date": "2026-04-13", "rate": 5.6}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "letyshops": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "topcashback": [{"date": "2026-04-13", "rate": 8.0}, {"date": "2026-04-14", "rate": 8.0}]}, "douglas": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-13", "rate": 4.5}, {"date": "2026-04-14", "rate": 4.5}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "farnell": {"beruby": [{"date": "2026-04-13", "rate": 4.2}, {"date": "2026-04-14", "rate": 4.2}], "igraal": [{"date": "2026-04-13", "rate": 4.5}, {"date": "2026-04-14", "rate": 4.5}], "topcashback": [{"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}]}, "gstar": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}], "letyshops": [{"date": "2026-04-13", "rate": 2.6}, {"date": "2026-04-14", "rate": 2.6}]}, "ganaenergia": {"beruby": [{"date": "2026-04-13", "rate": 20.0}], "igraal": [{"date": "2026-04-13", "rate": 14.0}]}, "hm": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}], "letyshops": [{"date": "2026-04-14", "rate": 1.5}]}, "honor": {"beruby": [{"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "igraal": [{"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "letyshops": [{"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "hotelesdotcom": {"beruby": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "igraal": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "letyshops": [{"date": "2026-04-13", "rate": 2.65}, {"date": "2026-04-14", "rate": 2.65}], "topcashback": [{"date": "2026-04-14", "rate": 1.5}]}, "iberdrola": {"beruby": [{"date": "2026-04-13", "rate": 3.12}, {"date": "2026-04-14", "rate": 3.12}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}]}, "iqos": {"beruby": [{"date": "2026-04-13", "rate": 25.0}, {"date": "2026-04-14", "rate": 25.0}], "igraal": [{"date": "2026-04-13", "rate": 25.0}, {"date": "2026-04-14", "rate": 25.0}]}, "jdsports": {"beruby": [{"date": "2026-04-13", "rate": 6.3}, {"date": "2026-04-14", "rate": 6.3}], "igraal": [{"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 9.5}], "letyshops": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "topcashback": [{"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}]}, "kenay": {"beruby": [{"date": "2026-04-13", "rate": 5.6}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 12.0}, {"date": "2026-04-14", "rate": 12.0}], "letyshops": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "topcashback": [{"date": "2026-04-13", "rate": 8.0}, {"date": "2026-04-14", "rate": 8.0}]}, "klast": {"beruby": [{"date": "2026-04-13", "rate": 5.6}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}], "letyshops": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "topcashback": [{"date": "2026-04-13", "rate": 10.0}, {"date": "2026-04-14", "rate": 10.0}]}, "lastminute": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}], "letyshops": [{"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "topcashback": [{"date": "2026-04-13", "rate": 1.0}, {"date": "2026-04-14", "rate": 1.0}]}, "lookfantastic": {"beruby": [{"date": "2026-04-13", "rate": 4.9}, {"date": "2026-04-14", "rate": 4.9}], "igraal": [{"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "letyshops": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "topcashback": [{"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}]}, "maisonsdumonde": {"beruby": [{"date": "2026-04-13", "rate": 4.9}, {"date": "2026-04-14", "rate": 4.9}], "igraal": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "letyshops": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}]}, "miin": {"beruby": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "movistar": {"beruby": [{"date": "2026-04-13", "rate": 11.94}], "igraal": [{"date": "2026-04-13", "rate": 9.0}], "letyshops": [{"date": "2026-04-13", "rate": 8.75}]}, "n26": {"beruby": [{"date": "2026-04-13", "rate": 14.0}, {"date": "2026-04-14", "rate": 14.0}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}]}, "nordvpn": {"beruby": [{"date": "2026-04-13", "rate": 28.0}, {"date": "2026-04-14", "rate": 28.0}], "igraal": [{"date": "2026-04-13", "rate": 70.0}, {"date": "2026-04-14", "rate": 70.0}], "topcashback": [{"date": "2026-04-13", "rate": 40.0}, {"date": "2026-04-14", "rate": 40.0}], "letyshops": [{"date": "2026-04-14", "rate": 20.0}]}, "octopus": {"beruby": [{"date": "2026-04-13", "rate": 21.0}, {"date": "2026-04-14", "rate": 21.0}], "igraal": [{"date": "2026-04-13", "rate": 35.0}, {"date": "2026-04-14", "rate": 35.0}], "letyshops": [{"date": "2026-04-13", "rate": 15.75}, {"date": "2026-04-14", "rate": 15.75}]}, "pandora": {"beruby": [{"date": "2026-04-13", "rate": 4.2}, {"date": "2026-04-14", "rate": 4.2}], "igraal": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "letyshops": [{"date": "2026-04-13", "rate": 7.85}, {"date": "2026-04-14", "rate": 7.85}], "topcashback": [{"date": "2026-04-13", "rate": 6.0}, {"date": "2026-04-14", "rate": 6.0}]}, "primaseguros": {"beruby": [{"date": "2026-04-13", "rate": 90.0}, {"date": "2026-04-14", "rate": 90.0}], "igraal": [{"date": "2026-04-13", "rate": 80.0}, {"date": "2026-04-14", "rate": 80.0}]}, "promofarma": {"beruby": [{"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}], "igraal": [{"date": "2026-04-13", "rate": 6.5}, {"date": "2026-04-14", "rate": 10.5}], "letyshops": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "topcashback": [{"date": "2026-04-13", "rate": 8.5}, {"date": "2026-04-14", "rate": 8.5}]}, "qatar": {"beruby": [{"date": "2026-04-13", "rate": 0.68}, {"date": "2026-04-14", "rate": 0.68}], "igraal": [{"date": "2026-04-13", "rate": 1.0}, {"date": "2026-04-14", "rate": 1.0}], "letyshops": [{"date": "2026-04-13", "rate": 3.3}, {"date": "2026-04-14", "rate": 3.3}], "topcashback": [{"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}]}, "riafinancial": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}], "letyshops": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "topcashback": [{"date": "2026-04-13", "rate": 1.15}, {"date": "2026-04-14", "rate": 1.15}]}, "santevet": {"beruby": [{"date": "2026-04-13", "rate": 1.4}, {"date": "2026-04-14", "rate": 1.4}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}]}, "showroomprive": {"beruby": [{"date": "2026-04-13", "rate": 4.55}, {"date": "2026-04-14", "rate": 4.55}], "igraal": [{"date": "2026-04-13", "rate": 7.0}, {"date": "2026-04-14", "rate": 7.0}], "letyshops": [{"date": "2026-04-13", "rate": 3.25}, {"date": "2026-04-14", "rate": 3.25}]}, "smartbox": {"beruby": [{"date": "2026-04-13", "rate": 5.6}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 16.0}, {"date": "2026-04-14", "rate": 14.0}], "letyshops": [{"date": "2026-04-13", "rate": 4.3}, {"date": "2026-04-14", "rate": 4.3}], "topcashback": [{"date": "2026-04-13", "rate": 8.0}, {"date": "2026-04-14", "rate": 8.0}]}, "stylevana": {"beruby": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "letyshops": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "unicaja": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 15.0}, {"date": "2026-04-14", "rate": 15.0}]}, "vertbaudet": {"beruby": [{"date": "2026-04-13", "rate": 2.66}, {"date": "2026-04-14", "rate": 2.66}], "igraal": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-13", "rate": 7.85}, {"date": "2026-04-14", "rate": 7.85}]}, "worten": {"beruby": [{"date": "2026-04-13", "rate": 3.36}, {"date": "2026-04-14", "rate": 3.36}], "igraal": [{"date": "2026-04-13", "rate": 2.5}, {"date": "2026-04-14", "rate": 2.5}], "letyshops": [{"date": "2026-04-13", "rate": 2.4}, {"date": "2026-04-14", "rate": 2.4}]}, "zalandoprive": {"beruby": [{"date": "2026-04-13", "rate": 8.4}, {"date": "2026-04-14", "rate": 5.6}], "igraal": [{"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}], "letyshops": [{"date": "2026-04-13", "rate": 4.0}, {"date": "2026-04-14", "rate": 4.0}], "topcashback": [{"date": "2026-04-14", "rate": 8.0}]}, "zooplus": {"beruby": [{"date": "2026-04-13", "rate": 1.4}, {"date": "2026-04-14", "rate": 1.4}], "igraal": [{"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "letyshops": [{"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}], "topcashback": [{"date": "2026-04-13", "rate": 3.0}, {"date": "2026-04-14", "rate": 3.0}]}, "iherb": {"beruby": [{"date": "2026-04-13", "rate": 3.5}, {"date": "2026-04-14", "rate": 3.5}], "igraal": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}], "letyshops": [{"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}], "topcashback": [{"date": "2026-04-13", "rate": 5.0}, {"date": "2026-04-14", "rate": 5.0}]}, "rebuy": {"beruby": [{"date": "2026-04-13", "rate": 3.15}, {"date": "2026-04-14", "rate": 3.15}], "igraal": [{"date": "2026-04-13", "rate": 2.0}, {"date": "2026-04-14", "rate": 2.0}], "letyshops": [{"date": "2026-04-13", "rate": 2.25}, {"date": "2026-04-14", "rate": 2.25}]}};
+
+function gRates(id,cpa){
+  // cpa===0 → no deal; cpa===null CPL brands still have portal rates
+  if(cpa===0)
+    return{igraal:null,letyshops:null,topcashback:null,beruby:null};
+  const live=LIVE_RATES[id];
+  if(!live) return{igraal:null,letyshops:null,topcashback:null,beruby:null};
+  return{
+    igraal:     live.igraal     ??null,
+    letyshops:  live.letyshops  ??null,
+    topcashback:live.topcashback??null,
+    beruby:     live.beruby     ??null
+  };
+}
+
+function gHist(id,rates){
+  const live=LIVE_HIST_RAW[id];
+  if(!live) return null;
+  const allDates=[...new Set(
+    Object.values(live).flat().map(x=>x.date)
+  )].sort();
+  if(!allDates.length) return null;
+  const h={};
+  ['igraal','letyshops','topcashback','beruby'].forEach(p=>{
+    const entries=live[p]||[];
+    h[p]=allDates.map(d=>{
+      const e=entries.find(x=>x.date===d);
+      return{date:d,rate:e?e.rate:null};
+    });
+  });
+  return{dates:allDates,h};
+}
+
+// OK = solo si own > best estrictamente. Empate → vigilar.
+function gStatus(cpa,own,best,pend,cpl,nd){
+  if(pend)          return 'pendiente';
+  if(cpl)           return 'cpl';
+  if(nd)            return 'sin-acuerdo';
+  if(own===null)    return 'sin-acuerdo';
+  if(best===null)   return 'ok';
+  if(best>cpa)      return 'renegociar';
+  if(own>best)      return 'ok';
+  if(best-own<1.5)  return 'vigilar';
+  return 'actuar';
+}
+
+// ── Tier by revenue (rev_mar) ────────────────────────────
+function revTier(rev){
+  if(rev==null) return null;
+  if(rev>=10000) return{label:'KEY',cls:'bkey'};
+  if(rev>=3000)  return{label:'HIGH',cls:'bok'};
+  if(rev>=1000)  return{label:'MED',cls:'bbl'};
+  return{label:'LOW',cls:'bmu'};
+}
+
+// ── Enrich ───────────────────────────────────────────────
+const BRANDS=D.map(row=>{
+  const[id,name,kam,cat,net,cpa,cplFlag]=row;
+  const pend=cpa===null&&cplFlag!==true;
+  const cpl=cplFlag===true||(cplFlag!==false&&!pend&&cpa>CPL_T);
+  const nd=!pend&&!cpl&&cpa===0;
+  const rates=gRates(id,cpa);
+  const own=rates.igraal;
+  const comps=PORTALS.filter(p=>p!==OWN).map(p=>rates[p]).filter(v=>v!==null&&v>0);
+  const best=comps.length?Math.max(...comps):null;
+  const bestP=best!==null?PORTALS.filter(p=>p!==OWN).find(p=>rates[p]===best):null;
+  const delta=(own&&best)?+(own-best).toFixed(2):null;
+  const margin=(own&&cpa&&!cpl&&!nd&&!pend)?+(cpa-own).toFixed(2):null;
+  const op_mg=(margin&&cpa)?Math.round(margin/cpa*100):null;
+  const headroom=(best&&cpa&&!cpl&&!nd&&!pend)?+(cpa-best).toFixed(2):null;
+  const maxR=Math.max(...PORTALS.map(p=>rates[p]||0),(cpl||pend||nd)?0:cpa||0);
+  const ranked=PORTALS.map(p=>({p,v:rates[p]})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const rpos=ranked.length?ranked.findIndex(x=>x.p===OWN)+1:0;
+  const hist=(!pend&&!cpl&&!nd)?gHist(id,rates):null;
+  const daysL=hist?hist.h.igraal.filter((x,i)=>{
+    if(!x.rate)return false;
+    return PORTALS.filter(p=>p!==OWN).some(p=>{
+      const c=hist.h[p][i];return c&&c.rate&&c.rate>x.rate+0.3;
+    });
+  }).length:0;
+  const perf=PERF_DATA[id]||null;
+  const tier=revTier(perf?.rev_mar??null);
+  return{id,name,kam,cat,net,cpa,pend,cpl,nd,rates,own,best,bestP,
+    delta,margin,op_mg,headroom,maxR,
+    rank:{pos:rpos,total:ranked.length,sorted:ranked},
+    hist,daysL,perf,tier,status:gStatus(cpa,own,best,pend,cpl,nd)};
+});
+
+// ── Populate dropdowns ───────────────────────────────────
+function popFilters(){
+  const kams=[...new Set(BRANDS.map(b=>b.kam).filter(k=>k&&k!=='—'))].sort();
+  const cats=[...new Set(BRANDS.map(b=>b.cat).filter(c=>c&&c!=='—'))].sort();
+  const nets=[...new Set(BRANDS.map(b=>b.net).filter(n=>n&&n!=='—'))].sort();
+  kams.forEach(k=>document.getElementById('kamSel').innerHTML+=`<option>${k}</option>`);
+  cats.forEach(c=>document.getElementById('catSel').innerHTML+=`<option>${c}</option>`);
+  nets.forEach(n=>document.getElementById('netSel').innerHTML+=`<option>${n}</option>`);
+}
+
+// ── State ────────────────────────────────────────────────
+let filt='all',kamF='',catF='',netF='',q='',srt='name',dir=1,chi=null;
+
+// ── KPIs ─────────────────────────────────────────────────
+function kpiCount(f){
+  if(f==='all')    return BRANDS.length;
+  if(f==='lider')  return BRANDS.filter(b=>b.rank.pos===1&&!b.cpl&&!b.nd&&!b.pend).length;
+  return BRANDS.filter(b=>b.status===f).length;
+}
+
+function setFilt(f){
+  filt=f;
+  // sync tabs — tab "all" covers "all" and "lider" (no tab for lider)
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.classList.toggle('on', t.dataset.f===f || (f==='lider'&&t.dataset.f==='all'));
+  });
+  renderKPIs();
+  renderTable();
+  drawTrendChart();
+}
+
+function renderKPIs(){
+  document.getElementById('ks').innerHTML=getKpiDefs().map(k=>
+    `<div class="kpi${filt===k.f?' active':''}" data-filter="${k.f}" style="--acc:${k.acc}">
+      <div class="kv" style="color:${k.vc}">${kpiCount(k.f)}</div>
+      <div class="kl">${k.l}</div>
+    </div>`
+  ).join('');
+  // attach click
+  document.querySelectorAll('#ks .kpi').forEach(card=>{
+    card.addEventListener('click',()=>{
+      const f=card.dataset.filter;
+      // segundo click en activo → vuelve a todas
+      setFilt(filt===f?'all':f);
+    });
+  });
+  document.getElementById('dtag').textContent=TODAY;
+}
+
+// ── List + sort ──────────────────────────────────────────
+function getList(){
+  let l=[...BRANDS];
+
+  // filter
+  if(filt==='lider'){
+    l=l.filter(b=>b.rank.pos===1&&!b.cpl&&!b.nd&&!b.pend);
+  } else if(filt!=='all'){
+    l=l.filter(b=>b.status===filt);
+  }
+  if(kamF) l=l.filter(b=>b.kam===kamF);
+  if(catF) l=l.filter(b=>b.cat===catF);
+  if(netF) l=l.filter(b=>b.net===netF);
+  if(q)    l=l.filter(b=>b.name.toLowerCase().includes(q)||b.kam.toLowerCase().includes(q));
+
+  // sort
+  const val=(b,col)=>{
+    switch(col){
+      case 'name':        return b.name.toLowerCase();
+      case 'cpain':       return b.cpa??-1;
+      case 'own':         return b.own??-1;
+      case 'letyshops':   return b.rates.letyshops??-1;
+      case 'topcashback': return b.rates.topcashback??-1;
+      case 'beruby':      return b.rates.beruby??-1;
+      case 'rank':        return b.rank.pos||99;
+      case 'delta':       return b.delta??-999;
+      case 'margin':      return b.margin??-999;
+      case 'revmar':      return b.perf?.rev_mar??-1;
+      default:            return b.name.toLowerCase();
+    }
+  };
+  return l.sort((a,b)=>{
+    const av=val(a,srt),bv=val(b,srt);
+    return typeof av==='string'?av.localeCompare(bv)*dir:(av-bv)*dir;
+  });
+}
+
+// ── Cell renderers ───────────────────────────────────────
+function rcell(rate,portal,own,maxR,unit='%'){
+  if(rate===null)return`<td><span class="nv">—</span></td>`;
+  const pct=maxR>0?(rate/maxR*100).toFixed(0):0;
+  let color=PC[portal];
+  if(portal!==OWN&&own!==null){
+    if(rate>own+0.1)      color='var(--al)';
+    else if(rate<own-0.1) color='var(--ok)';
+    else                  color='var(--in)';
+  }
+  const label=unit==='€'?`${rate}€`:`${rate}%`;
+  return`<td>
+    <div class="rv" style="color:${color}">${label}</div>
+    <div class="rb"><div class="rbf" style="width:${pct}%;background:${PC[portal]}80"></div></div>
+  </td>`;
+}
+
+function mcell(b){
+  if(b.pend)return`<td><span class="bdg bbl">⏳ ${STRINGS[lang].stPending}</span></td>`;
+  if(b.cpl) return`<td><div class="rv" style="color:${PC[OWN]}">${b.own!==null?b.own+'€':'—'}</div><div style="margin-top:2px"><span class="bdg bpu" style="font-size:9px">CPL</span></div></td>`;
+  if(b.nd)  return`<td><span class="bdg bmu">${STRINGS[lang].stNoDeal}</span></td>`;
+  const mgC=b.margin>=3?'bok':b.margin>=1?'bwn':'bal';
+  const scl=b.maxR||1;
+  const pO=(b.own/scl*100).toFixed(0),pI=(b.cpa/scl*100).toFixed(0);
+  const pC=b.best?(b.best/scl*100).toFixed(0):null;
+  return`<td><div class="mc"><div class="mr">
+    <span class="mout">${b.own}%</span>
+    <span class="msep">→</span>
+    <span class="min2">${b.cpa}%</span>
+    <span class="bdg ${mgC}">+${b.margin}pp</span>
+    <span class="bdg bbl">${b.op_mg}% op.</span>
+  </div><div class="mbar">
+    <div class="mbf" style="width:${pO}%"></div>
+    ${pC!==null?`<div class="mbc" style="left:calc(${pC}% - 1px)"></div>`:''}
+    <div class="mbi" style="left:calc(${pI}% - 1px)"></div>
+  </div></div></td>`;
+}
+
+function getSTM(){const t=STRINGS[lang];return{
+  renegociar:`<span class="st str">⬤ ${t.stRenegociar}</span>`,
+  actuar:    `<span class="st sta">⬤ ${t.stActuar}</span>`,
+  vigilar:   `<span class="st stv">⬤ ${t.stVigilar}</span>`,
+  ok:        `<span class="st sto">⬤ ${t.stOk}</span>`,
+  'sin-acuerdo':`<span class="st stn">⬤ ${t.stNoDeal}</span>`,
+  cpl:       `<span class="st stc">⬤ ${t.stCpl}</span>`,
+  pendiente: `<span class="st stp">⬤ ${t.stPending}</span>`,
+};}
+
+// ── Table render ─────────────────────────────────────────
+function renderTable(){
+  const list=getList();
+  const tb=document.getElementById('tbody');
+  if(!list.length){
+    tb.innerHTML=`<tr><td colspan="10" style="padding:50px;text-align:center;color:var(--mu)">${STRINGS[lang].noResults}</td></tr>`;
+    return;
+  }
+  tb.innerHTML=list.map(b=>{
+    const kc=KC[b.kam]||'#506090';
+    const rcls=({1:'rn1',2:'rn2',3:'rn3',4:'rn4'})[b.rank.pos]||'rn4';
+    const dS=b.delta===null?'':b.delta>0?'+':'';
+    const dC=b.delta===null?'dmu':b.delta>0?'dpos':b.delta===0?'dtie':'dneg';
+    const cpaD=b.pend?`<span class="bdg bbl">${STRINGS[lang].stPending}</span>`:
+      b.cpl?`<span class="bdg bpu">CPL</span>`:
+      b.nd?`<span style="color:var(--mu)">—</span>`:
+      `<span style="font-weight:800;color:var(--bl);font-size:12px">${b.cpa}%</span>`;
+    const revFmt=v=>v==null?'—':v>=1000000?'€'+(v/1000000).toFixed(1)+'M':v>=1000?'€'+(v/1000).toFixed(0)+'k':'€'+v.toFixed(0);
+    const revD=b.perf?.rev_mar!=null
+      ?`<div style="font-size:12px;font-weight:700;color:var(--tx)">${revFmt(b.perf.rev_mar)}</div>${b.tier?`<span class="bdg ${b.tier.cls}" style="margin-top:2px;display:inline-block">${b.tier.label}</span>`:''}`
+      :`<span style="color:var(--mu)">—</span>`;
+    return`<tr onclick="openP('${b.id}')">
+      <td class="bc">
+        <div class="bn">${b.name}${b.tier?` <span class="bdg ${b.tier.cls}" style="vertical-align:middle">${b.tier.label}</span>`:''}</div>
+        <div class="bsub">
+          <span class="kdot" style="background:${kc}"></span>
+          <span>${b.kam==='—'?STRINGS[lang].noKam:b.kam}</span>
+          ${b.cat!=='—'?`<span style="color:var(--brd)">·</span><span>${b.cat}</span>`:''}
+        </div>
+      </td>
+      <td>${cpaD}</td>
+      <td>${revD}</td>
+      ${mcell(b)}
+      ${rcell(b.rates.beruby,     'beruby',     b.own, b.maxR, b.cpl?'€':'%')}
+      ${rcell(b.rates.letyshops,  'letyshops',  b.own, b.maxR, b.cpl?'€':'%')}
+      ${rcell(b.rates.topcashback,'topcashback',b.own, b.maxR, b.cpl?'€':'%')}
+      <td>${b.rank.total
+        ?`<span class="rnk ${rcls}">${b.rank.pos}</span><span style="color:var(--mu);font-size:9px">/${b.rank.total}</span>`
+        :`<span style="color:var(--brd2)">—</span>`}
+      </td>
+      <td><span class="${dC}">${b.delta===null?'—':b.delta===0?'=':dS+b.delta+'pp'}</span></td>
+     <td>${b.margin!==null?`<span class="rv" style="color:${b.margin>=3?'var(--ok)':b.margin>=1?'var(--wn)':'var(--al)'}">+${b.margin}pp</span>`:'<span class="nv">—</span>'}${b.rank.pos===1&&b.op_mg>=40?`<br><span class="bdg bor" style="margin-top:3px;display:inline-block">${STRINGS[lang].badgeReducible}</span>`:''}</td> <td>${getSTM()[b.status]||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Panel ────────────────────────────────────────────────
+function openP(id){
+  const b=BRANDS.find(x=>x.id===id);if(!b)return;
+  document.getElementById('pname').textContent=b.name;
+  const kc=KC[b.kam]||'#506090';
+  document.getElementById('psub').innerHTML=
+    `<span class="kdot" style="background:${kc}"></span>
+     <span>${b.kam==='—'?STRINGS[lang].noKam:b.kam}</span>
+     ${b.cat!=='—'?`<span>· ${b.cat}</span>`:''}
+     <span style="color:var(--brd)">·</span><span>${b.net}</span>`;
+  if(chi){chi.destroy();chi=null}
+  buildPanel(b);
+  document.getElementById('ovl').classList.add('show');
+  document.getElementById('pan').classList.add('open');
+}
+function closeP(){
+  document.getElementById('ovl').classList.remove('show');
+  document.getElementById('pan').classList.remove('open');
+  if(chi){chi.destroy();chi=null}
+}
+
+function buildPanel(b){
+  const t=STRINGS[lang];
+  let aC='a-n',aI='',aT='',aX='';
+  if(b.pend){
+    aI='⏳';aT=t.act_pend_t;
+    aX=t.act_pend_x(b.name);
+  }else if(b.cpl){
+    aC='a-p';aI='🔮';aT=t.act_cpl_t;
+    aX=t.act_cpl_x(b.cpa);
+  }else if(b.nd){
+    aI='⚫';aT=t.act_nd_t;
+    aX=t.act_nd_x(b.name);
+  }else if(b.status==='renegociar'){
+    aC='a-r';aI='🚨';aT=t.act_ren_t;
+    aX=t.act_ren_x(PL[b.bestP],b.best,b.cpa,(b.best-b.cpa).toFixed(1));
+  }else if(b.status==='actuar'){
+    aC='a-r';aI='⚠️';aT=t.act_act_t;
+    aX=t.act_act_x(PL[b.bestP],Math.abs(b.delta).toFixed(1),(b.cpa-b.best).toFixed(1),Math.round((b.cpa-b.best)/b.cpa*100),b.daysL);
+  }else if(b.status==='vigilar'){
+    aC='a-y';aI='👀';aT=t.act_vig_t;
+    const gap=b.delta===0?t.act_vig_tie:'+'+Math.abs(b.delta).toFixed(1)+'pp';
+    aX=t.act_vig_x(b.bestP?PL[b.bestP]:t.competitor,gap,b.headroom!==null?b.headroom.toFixed(1)+'pp':'—');
+  }else{
+    aC='a-g';aI='✅';aT=t.act_ok_t;
+    aX=b.rank.pos===1
+      ?t.act_ok_x1(b.name,b.delta!==null?Math.abs(b.delta).toFixed(1):'—',b.margin,b.op_mg)
+      :t.act_ok_x2(b.rank.pos,b.rank.total);
+  }
+
+  // Left col
+  let L=`<div class="pt">${t.panDeal}</div>
+    <div class="itg">
+      <div class="iti">💰 CPA in <span class="iv" style="color:var(--bl)">${
+        b.cpa!==null?(b.cpl?'CPL':b.nd?t.stNoDeal:b.cpa+'%'):t.stPending
+      }</span></div>
+      ${b.margin!==null?`<div class="iti">📊 ${t.panMarginPp} <span class="iv">+${b.margin}pp</span></div>`:''}
+      ${b.op_mg!==null?`<div class="iti">⚡ ${t.panOpMg} <span class="iv" style="color:var(--bl)">${b.op_mg}%</span></div>`:''}
+      ${b.headroom!==null?`<div class="iti">📐 ${t.panHeadroom} <span class="iv" style="color:${b.headroom>=0?'var(--ok)':'var(--al)'}">${
+        b.headroom>=0?'+'+b.headroom.toFixed(1):'❌ '+b.headroom.toFixed(1)
+      }pp</span></div>`:''}
+      <div class="iti">🔗 ${t.panNet} <span class="iv">${b.net}</span></div>
+    </div>`;
+
+  if(!b.cpl&&!b.nd&&!b.pend&&b.own){
+    const scl=b.maxR||1;
+    const pO=(b.own/scl*100).toFixed(1),pI=(b.cpa/scl*100).toFixed(1);
+    const pC=b.best?(b.best/scl*100).toFixed(1):null;
+    const mgC=b.margin>=3?'bok':b.margin>=1?'bwn':'bal';
+    L+=`<div class="pt" style="margin-top:14px">${t.panMarginAnalysis}</div>
+      <div class="mw">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-bottom:4px">
+          <span>${t.panScale(scl.toFixed(1))}</span>
+          <div style="display:flex;gap:5px">
+            <span class="bdg ${mgC}">+${b.margin}pp</span>
+            <span class="bdg bbl">${b.op_mg}% op.</span>
+          </div>
+        </div>
+        <div class="mtrack">
+          <div class="mf2" style="width:${pO}%;background:var(--y)"></div>
+          ${pC?`<div class="mc3" style="left:calc(${pC}% - 1px)" title="${b.best}% mejor comp."></div>`:''}
+          <div class="mi3" style="left:calc(${pI}% - 1px)" title="${b.cpa}% CPA techo"></div>
+        </div>
+        <div class="mleg">
+          <div class="mlr">
+            <div class="mll"><div class="mld" style="background:var(--y)"></div>${t.igraalOurs}</div>
+            <div class="mlv" style="color:var(--y)">${b.own}%</div>
+          </div>
+          ${b.best?`<div class="mlr">
+            <div class="mll"><div class="mld" style="background:var(--al)"></div>${t.bestCompOf(PL[b.bestP])}</div>
+            <div class="mlv" style="color:var(--al)">${b.best}%</div>
+          </div>`:''}
+          <div class="mlr">
+            <div class="mll"><div class="mld" style="background:var(--mu)"></div>${t.panCpaCeil}</div>
+            <div class="mlv" style="color:var(--bl)">${b.cpa}%</div>
+          </div>
+          <div style="border-top:1px solid var(--brd);margin:4px 0"></div>
+          <div class="mlr">
+            <div class="mll">${t.panCanMatch}</div>
+            <div class="mlv" style="color:${b.headroom>=0?'var(--ok)':'var(--al)'}">
+              ${b.headroom>=0?t.panYes:t.panNo(Math.abs(b.headroom).toFixed(1))}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  if(b.perf){
+    const p=b.perf;
+    const fmt=v=>v==null?'—':v>=1000000?'€'+(v/1000000).toFixed(1)+'M':v>=1000?'€'+(v/1000).toFixed(0)+'k':'€'+v.toFixed(0);
+    const fmtP=v=>v==null?'—':v.toFixed(2)+'%';
+    const fmtM=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
+    L+=`<div class="pt" style="margin-top:14px">📈 Performance</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13px">
+      <div style="color:var(--tx2);font-size:10px;text-transform:uppercase;letter-spacing:.8px;grid-column:1/3;border-bottom:1px solid var(--brd);padding-bottom:4px;margin-bottom:2px">
+        <span>March</span>
+        <span style="float:right">Q1 YTD</span>
+      </div>
+      <div class="iti" style="margin:0;font-size:13px;color:var(--tx)">GMV <span class="iv">${fmt(p.gmv_mar)}</span></div>
+      <div class="iti" style="margin:0;font-size:13px;color:var(--tx)">GMV <span class="iv">${fmt(p.gmv_ytd)}</span></div>
+      <div class="iti" style="margin:0;font-size:13px;color:var(--tx)">Rev <span class="iv" style="color:var(--ok)">${fmt(p.rev_mar)}</span></div>
+      <div class="iti" style="margin:0;font-size:13px;color:var(--tx)">Rev <span class="iv" style="color:var(--ok)">${fmt(p.rev_ytd)}</span></div>
+      <div class="iti" style="margin:0;font-size:13px;color:var(--tx)">CPA <span class="iv">${fmtP(p.cpa_mar)}</span></div>
+      <div class="iti" style="margin:0;font-size:13px;color:var(--tx)">CPA <span class="iv">${fmtP(p.cpa_ytd)}</span></div>
+      <div class="iti" style="margin:0;font-size:13px;color:var(--tx);grid-column:1/3">MoM <span class="iv" style="color:${p.mom>=100?'var(--ok)':p.mom>=75?'var(--wn)':'var(--al)'}">${fmtM(p.mom)}</span></div>
+    </div>`;
+  }
+
+  if(b.perf&&b.perf.gmv_mar>0&&b.own&&!b.cpl&&!b.pend&&!b.nd){
+    const maxPp=+b.own.toFixed(1);
+    const capPp=+(Math.min(10,Math.max(5,b.best?(b.best-b.own+2):5))).toFixed(1);
+    L+=`<div class="pt" style="margin-top:14px">💰 Revenue potencial</div>
+    <div style="padding:10px;background:var(--s2);border:1px solid var(--brd);border-radius:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--tx2)">Ajustar cashback</span>
+        <span style="font-size:15px;font-weight:800" id="rpp" style="color:var(--mu)">0.0 pp</span>
+      </div>
+      <input type="range" id="rslider" min="-${capPp}" max="${maxPp}" step="0.1" value="0" style="width:100%;accent-color:var(--bl);cursor:pointer">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-top:2px;margin-bottom:10px">
+        <span>↑ +${capPp}pp (coste)</span>
+        <span>0</span>
+        <span>↓ −${maxPp}pp (ganancia)</span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;color:var(--tx2)">Durante</span>
+        <input type="number" id="rdays" value="30" min="1" max="365" style="width:55px;background:var(--s1);border:1px solid var(--brd2);border-radius:5px;color:var(--tx);padding:3px 7px;font-size:12px;text-align:center">
+        <span style="font-size:12px;color:var(--tx2)">días</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--s1);border:1px solid var(--brd);border-radius:6px;padding:7px 10px">
+        <span style="font-size:12px" id="rday">€0/día</span>
+        <span style="color:var(--mu);font-size:12px">→</span>
+        <span style="font-size:15px;font-weight:800" id="rtot">€0 total</span>
+      </div>
+    </div>`;
+  }
+
+  // Right col
+  let R=`<div class="pt">${t.panSnapshot}</div>
+    <div class="mkpis">
+      <div class="mkpi">
+        <div class="mv" style="color:var(--y)">${b.own!==null?b.own+'%':'—'}</div>
+        <div class="ml">${t.panIgraalToday}</div>
+      </div>
+      <div class="mkpi">
+        <div class="mv" style="color:${b.status==='ok'?'var(--ok)':'var(--al)'}">${b.best!==null?b.best+'%':'—'}</div>
+        <div class="ml">${t.panBestComp}</div>
+      </div>
+      <div class="mkpi">
+        <div class="mv" style="color:var(--tx2)">${b.rank.pos>0?b.rank.pos+'º/'+b.rank.total:'—'}</div>
+        <div class="ml">${t.panRank}</div>
+      </div>
+      ${b.margin!==null?`
+      <div class="mkpi">
+        <div class="mv" style="color:var(--bl)">${b.cpa}%</div>
+        <div class="ml">${t.panCpaReal}</div>
+      </div>
+      <div class="mkpi">
+        <div class="mv"><span class="bdg ${b.margin>=3?'bok':b.margin>=1?'bwn':'bal'}" style="font-size:14px">+${b.margin}pp</span></div>
+        <div class="ml">${t.panMarginPp}</div>
+      </div>
+      <div class="mkpi">
+        <div class="mv"><span class="bdg bbl" style="font-size:14px">${b.op_mg}%</span></div>
+        <div class="ml">${t.panOpMgLabel}</div>
+      </div>`:''}
+    </div>
+    <div class="pt" style="margin-top:14px">${t.panByPortal}</div>`;
+
+  b.rank.sorted.forEach(({p,v})=>{
+    const pct=b.maxR>0?(v/b.maxR*100).toFixed(1):0;
+    const isOwn=p===OWN;
+    R+=`<div class="hb">
+      <div class="hbh">
+        <div class="hbn" style="color:${PC[p]}">
+          ${isOwn?'🏠 ':''}${PL[p]}
+          ${v===b.maxR?'🏆':''}
+        </div>
+        <div class="hbv" style="color:${PC[p]}">${v}%</div>
+      </div>
+      <div class="hbt"><div class="hbf" style="width:${pct}%;background:${PC[p]}"></div></div>
+    </div>`;
+  });
+
+  if(b.hist){
+    R+=`<div class="pt" style="margin-top:14px">${t.panHistory}</div>
+      <div class="cbox"><canvas id="hchart"></canvas></div>`;
+  }
+
+  R+=`<div class="pt" style="margin-top:14px">${t.panAction}</div>
+    <div class="abox ${aC}">
+      <div class="aico">${aI}</div>
+      <div class="atit">${aT}</div>
+      <div class="atxt">${aX}</div>
+    </div>`;
+
+  const _note=localStorage.getItem('cb_note_'+b.id)||'';
+  document.getElementById('pbody').innerHTML=
+    `<div class="pcl">${L}</div><div class="pcr">${R}</div>
+     <div class="pnotes-row">
+       <div class="pt" style="margin-top:10px;margin-bottom:8px">
+         📝 ${t.panNotes}
+         <span class="pnotes-saved" id="nsaved">${t.panNotesSaved}</span>
+       </div>
+       <textarea class="pnotes-ta" id="pnotes" placeholder="${t.panNotesPh}">${_note.replace(/</g,'&lt;')}</textarea>
+     </div>`;
+
+  if(b.hist) requestAnimationFrame(()=>drawChart(b));
+
+  const _rs=document.getElementById('rslider');
+  if(_rs){
+    const _dGmv=b.perf.gmv_mar/31;
+    const _fr=v=>v>=1000?'€'+(v/1000).toFixed(1)+'k':'€'+v.toFixed(0);
+    const _upd=()=>{
+      const pp=+_rs.value, days=+(document.getElementById('rdays').value||30);
+      // pp>0 → reduce our rate → gain; pp<0 → increase our rate → cost
+      const absVal=Math.abs(pp), pd=_dGmv*absVal/100, tot=pd*days;
+      const elPp=document.getElementById('rpp');
+      const elDay=document.getElementById('rday');
+      const elTot=document.getElementById('rtot');
+      if(pp>0){
+        elPp.textContent='−'+pp.toFixed(1)+' pp';
+        elPp.style.color='var(--ok)';
+        elDay.textContent='+'+_fr(pd)+'/día';
+        elDay.style.color='var(--ok)';
+        elTot.textContent='+'+_fr(tot)+' total';
+        elTot.style.color='var(--ok)';
+      } else if(pp<0){
+        elPp.textContent='+'+absVal.toFixed(1)+' pp';
+        elPp.style.color='var(--or)';
+        elDay.textContent='−'+_fr(pd)+'/día';
+        elDay.style.color='var(--or)';
+        elTot.textContent='−'+_fr(tot)+' total';
+        elTot.style.color='var(--or)';
+      } else {
+        elPp.textContent='0.0 pp'; elPp.style.color='var(--mu)';
+        elDay.textContent='€0/día'; elDay.style.color='var(--mu)';
+        elTot.textContent='€0 total'; elTot.style.color='var(--mu)';
+      }
+    };
+    _rs.addEventListener('input',_upd);
+    document.getElementById('rdays').addEventListener('input',_upd);
+  }
+
+  let _nt;
+  document.getElementById('pnotes').addEventListener('input',e=>{
+    clearTimeout(_nt);
+    _nt=setTimeout(()=>{
+      localStorage.setItem('cb_note_'+b.id,e.target.value);
+      const s=document.getElementById('nsaved');
+      if(s){s.style.opacity='1';setTimeout(()=>s.style.opacity='0',1800)}
+    },500);
+  });
+}
+
+function drawChart(b){
+  if(chi){chi.destroy();chi=null}
+  const ctx=document.getElementById('hchart');
+  if(!ctx)return;
+  const labels=b.hist.dates.map(d=>d.slice(5));
+  const ds=PORTALS.map(p=>({
+    label:PL[p],
+    data:b.hist.h[p].map(x=>x.rate),
+    borderColor:PC[p],borderWidth:p===OWN?2.5:1.5,
+    borderDash:p===OWN?[]:[3,3],tension:.35,spanGaps:true,
+    pointRadius:0,pointHoverRadius:3,backgroundColor:PC[p]+'18',
+  }));
+  if(b.cpa&&!b.cpl&&!b.nd&&b.cpa<=CPL_T){
+    ds.push({label:'CPA in',data:labels.map(()=>b.cpa),
+      borderColor:'#4050a070',borderWidth:1,borderDash:[2,4],pointRadius:0,tension:0});
+  }
+  chi=new Chart(ctx,{
+    type:'line',data:{labels,datasets:ds},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{color:'#4050a0',font:{size:9,family:'Figtree'},
+          boxWidth:9,padding:8,filter:i=>i.datasetIndex<4}},
+        tooltip:{backgroundColor:'#252d4f',borderColor:'#374080',borderWidth:1,
+          titleColor:'#8898d0',bodyColor:'#cdd5f8',
+          callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y!==null?c.parsed.y+'%':'—'}`}}
+      },
+      scales:{
+        x:{ticks:{color:'#37408060',font:{size:8},maxTicksLimit:8},grid:{color:'#252d4f'}},
+        y:{ticks:{color:'#37408060',font:{size:8},callback:v=>v+'%'},grid:{color:'#252d4f'}}
+      }
+    }
+  });
+}
+
+// ── Events ───────────────────────────────────────────────
+
+// Tabs
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const f=btn.dataset.f;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    btn.classList.add('on');
+    filt=f;
+    renderKPIs();   // actualiza active state de KPIs
+    renderTable();
+  });
+});
+
+// Dropdowns
+document.getElementById('kamSel').addEventListener('change',e=>{kamF=e.target.value;renderTable()});
+document.getElementById('catSel').addEventListener('change',e=>{catF=e.target.value;renderTable()});
+document.getElementById('netSel').addEventListener('change',e=>{netF=e.target.value;renderTable()});
+document.getElementById('search').addEventListener('input',e=>{q=e.target.value.toLowerCase().trim();renderTable()});
+document.getElementById('sortSel').addEventListener('change',e=>{srt=e.target.value;renderTable()});
+
+// Sortable headers
+document.querySelectorAll('thead th.sortable').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const col=th.dataset.col;
+    if(srt===col){dir*=-1}else{srt=col;dir=-1}
+    document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(dir===1?'sort-asc':'sort-desc');
+    renderTable();
+  });
+});
+
+// ── Trend chart ──────────────────────────────────────────
+Chart.Tooltip.positioners.trendInside=function(els,pos){
+  const ca=this.chart.chartArea;
+  return{x:Math.min(Math.max(pos.x,ca.left+2),ca.right-2),y:ca.top+4,xAlign:'center',yAlign:'top'};
+};
+function trendExternalTooltip(context){
+  let el=document.getElementById('trend-tt');
+  if(!el){
+    el=document.createElement('div');
+    el.id='trend-tt';
+    el.style.cssText='position:fixed;background:#1e2a4a;border:1px solid #374080;border-radius:7px;padding:8px 11px;font-family:Figtree,sans-serif;font-size:11px;color:#cdd5f8;pointer-events:none;z-index:999;transition:opacity .1s;box-shadow:0 8px 24px rgba(0,0,0,.5)';
+    document.body.appendChild(el);
+  }
+  const {tooltip}=context;
+  if(tooltip.opacity===0){el.style.opacity='0';return;}
+  const rect=context.chart.canvas.getBoundingClientRect();
+  let html=`<div style="color:#8898d0;font-size:9px;letter-spacing:.5px;margin-bottom:5px">${tooltip.title?.[0]||''}</div>`;
+  (tooltip.dataPoints||[]).forEach(dp=>{
+    html+=`<div style="display:flex;align-items:center;gap:7px;padding:1px 0">
+      <span style="width:8px;height:8px;background:${dp.dataset.borderColor};border-radius:2px;flex-shrink:0;display:inline-block"></span>
+      <span style="color:#8898d0">${dp.dataset.label}:</span>
+      <strong style="color:#fff">${dp.parsed.y}</strong>
+    </div>`;
+  });
+  el.innerHTML=html;
+  el.style.opacity='1';
+  const tx=rect.left+tooltip.caretX;
+  const ty=rect.top+tooltip.caretY;
+  const ew=el.offsetWidth,eh=el.offsetHeight;
+  el.style.left=Math.min(tx+12,window.innerWidth-ew-8)+'px';
+  el.style.top=Math.max(ty-eh-8,8)+'px';
+}
+const TREND_FILTS=new Set(['renegociar','actuar','vigilar','ok','lider']);
+let tchi=null;
+function buildStatusHistory(){
+  const dates=[...new Set(
+    Object.values(LIVE_HIST_RAW).flatMap(portals=>
+      Object.values(portals).flatMap(arr=>arr.map(e=>e.date))
+    )
+  )].sort();
+  const r={dates,ren:[],act:[],ok:[],lid:[]};
+  dates.forEach(date=>{
+    let ren=0,act=0,okc=0,lid=0;
+    D.forEach(([id,,,,, cpa])=>{
+      if(cpa===null||cpa>CPL_T||cpa===0)return;
+      const raw=LIVE_HIST_RAW[id];if(!raw)return;
+      const g=p=>{const a=(raw[p]||[]).find(x=>x.date===date);return a?a.rate:null;};
+      const own=g('igraal');
+      const comps=['letyshops','topcashback','beruby'].map(p=>g(p)).filter(v=>v!==null&&v>0);
+      const best=comps.length?Math.max(...comps):null;
+      const st=gStatus(cpa,own,best,false,false,false);
+      if(st==='renegociar')ren++;
+      else if(st==='actuar')act++;
+      else if(st==='ok'){
+        okc++;
+        const allR=PORTALS.map(p=>g(p)).filter(v=>v>0);
+        if(own&&allR.length&&own>=Math.max(...allR))lid++;
+      }
+    });
+    r.ren.push(ren);r.act.push(act);r.ok.push(okc);r.lid.push(lid);
+  });
+  return r;
+}
+function drawTrendChart(){
+  const bar=document.getElementById('trendChart')?.parentElement;if(!bar)return;
+  if(!TREND_FILTS.has(filt)){bar.style.display='none';return;}
+  bar.style.display='block';
+  const ctx=document.getElementById('trendChart');if(!ctx)return;
+  if(tchi){tchi.destroy();tchi=null;}
+  const {dates,ren,act,ok,lid}=buildStatusHistory();
+  if(dates.length<2)return;
+  const t=STRINGS[lang];
+  const lbls=dates.map(d=>d.slice(5));
+  tchi=new Chart(ctx,{
+    type:'line',
+    data:{labels:lbls,datasets:[
+      {label:t.tabRenegociar,data:ren,borderColor:'#f87171',borderWidth:2,tension:.3,pointRadius:3,pointHoverRadius:5,fill:false,spanGaps:true},
+      {label:t.tabActuar,data:act,borderColor:'#fbbf24',borderWidth:2,tension:.3,pointRadius:3,pointHoverRadius:5,fill:false,spanGaps:true},
+      {label:t.tabLider,data:ok,borderColor:'#4ade80',borderWidth:2,tension:.3,pointRadius:3,pointHoverRadius:5,fill:false,spanGaps:true},
+      {label:'#1 Portal',data:lid,borderColor:'#6FCDFF',borderWidth:1.5,borderDash:[4,3],tension:.3,pointRadius:3,pointHoverRadius:5,fill:false,spanGaps:true},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,clip:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'right',labels:{color:'#8898d0',font:{size:9,family:'Figtree'},boxWidth:8,padding:7,usePointStyle:true,pointStyleWidth:8}},
+        tooltip:{enabled:false,external:trendExternalTooltip}
+      },
+      scales:{
+        x:{ticks:{color:'#8898d0',font:{size:8},maxTicksLimit:20},grid:{display:false},border:{display:false}},
+        y:{ticks:{color:'#8898d0',font:{size:8},stepSize:1,precision:0},grid:{color:'#252d4f50'},border:{display:false},min:0}
+      }
+    }
+  });
+  ctx.addEventListener('mouseleave',()=>{
+    const el=document.getElementById('trend-tt');if(el)el.style.opacity='0';
+  });
+}
+
+// ── Init ─────────────────────────────────────────────────
+popFilters();
+applyTheme(theme);
+applyLang(lang);
+drawTrendChart();
+</script>
+</body>
+</html>
